@@ -3,6 +3,7 @@ import numpy as np
 import utility
 
 
+# edge_to_triangles edge_to_nodes вообще получались в определенном порядке, поэтому словари не нужны и можно упростить
 def add_edge_centers(dim, tag, edge_to_triangles, edge_to_nodes):
     node_tags, node_coords, _ = gmsh.model.mesh.get_nodes(returnParametricCoord=False)
     node_coords = node_coords.reshape(-1, 3)

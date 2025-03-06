@@ -1,0 +1,64 @@
+import gmsh
+import numpy as np
+import utility
+import small_quadrangle
+
+
+# центр описанной окружности, пересечение серединных перпендикуляров
+def generate(triangle_mesh, fname, ui=False):
+    gmsh.initialize()
+
+    if not ui:
+        gmsh.option.setNumber("General.Terminal", 0)
+
+    gmsh.open(triangle_mesh)
+
+    triangle_type = gmsh.model.mesh.get_element_type("Triangle", 1)
+
+    max_element_tag = gmsh.model.mesh.get_max_element_tag()
+
+    gmsh.model.mesh.createEdges()
+    edge_tags, edge_nodes = gmsh.model.mesh.get_all_edges()
+    edge_to_nodes = {edge: nodes for edge, nodes in zip(edge_tags, edge_nodes.reshape(-1, 2))}
+
+    for dim, physical_tag in gmsh.model.get_physical_groups(dim=2):
+        for surf_tag in gmsh.model.get_entities_for_physical_group(dim, physical_tag):
+            boundaries = gmsh.model.get_boundary(((dim, surf_tag),), oriented=False)
+
+            triangle_tags, triangle_nodes = gmsh.model.mesh.get_elements_by_type(triangle_type, surf_tag)
+            center_tags = utility.add_triangle_centers(dim, surf_tag, triangle_nodes)
+            triangle_to_center = {triangle: center for triangle, center in zip(triangle_tags, center_tags)}
+
+            edge_nodes = gmsh.model.mesh.get_element_edge_nodes(triangle_type, surf_tag)        
+            edge_tags, edge_orientations = gmsh.model.mesh.get_edges(edge_nodes)
+            triangle_to_edges = {triangle: edges for triangle, edges in zip(triangle_tags, edge_tags.reshape(-1, 3))}
+            edge_to_triangles = utility.reverse_dict(triangle_to_edges)
+            edge_to_center = small_quadrangle.add_edge_centers(dim, surf_tag, edge_to_triangles, edge_to_nodes)
+
+
+            new_triangle_tags, new_triangle_nodes = [], []
+
+            for triangle_center, edges in zip(center_tags, edge_tags.reshape(-1, 3)):
+                for edge in edges:
+                    for edge_node in edge_to_nodes[edge]:
+                        max_element_tag += 1
+                        new_triangle_tags.append(max_element_tag)
+                        new_triangle_nodes.extend((edge_node, edge_to_center[edge], triangle_center))
+
+            gmsh.model.mesh.add_elements_by_type(surf_tag, triangle_type, new_triangle_tags, new_triangle_nodes)
+            gmsh.model.mesh.remove_elements(dim, surf_tag, triangle_tags)
+
+    gmsh.model.mesh.remove_duplicate_nodes()
+    gmsh.model.mesh.renumber_elements()
+    gmsh.model.mesh.renumber_nodes()
+
+    gmsh.write(fname)
+
+    if ui:
+        gmsh.fltk.run()
+
+    gmsh.finalize()
+
+
+if __name__ == '__main__':
+    generate('meshes/triangle.msh', 'meshes/new_small_triangle.msh', ui=True)

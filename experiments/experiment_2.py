@@ -17,6 +17,8 @@ import incenter
 import orthocenter
 import split_quadrangles
 import uniform_split
+import circumcenter_6
+import uniform_split
 
 
 
@@ -77,7 +79,9 @@ def run(name, nsets=1):
             f'{cur_name}_centroid',
             f'{cur_name}_incenter',
             f'{cur_name}_orthocenter',
-            f'{cur_name}_split_quadrangles'
+            f'{cur_name}_split_quadrangles',
+            f'{cur_name}_circumcenter_6',
+            f'{cur_name}_uniform_split'
         ] for cur_name in (f'{name}_{i}' for i in range(1, n+1))
     ]
     mesh_names_msh = [[os.path.join(meshes_msh_dir, f'{mesh_name}.msh') for mesh_name in row] for row in mesh_names]
@@ -100,6 +104,8 @@ def run(name, nsets=1):
                 incenter.generate(mesh_names_msh[i][0], mesh_names_msh[i][5])
                 orthocenter.generate(mesh_names_msh[i][0], mesh_names_msh[i][6])
                 split_quadrangles.split(mesh_names_msh[i][1], mesh_names_msh[i][7])
+                circumcenter_6.generate(mesh_names_msh[i][0], mesh_names_msh[i][8])
+                uniform_split.uniform_split(mesh_names_msh[i][0], mesh_names_msh[i][9])
 
                 nodes.append(nodes_number)
                 elements.append(elements_number)
