@@ -61,17 +61,17 @@ with st.sidebar:
     u_a_text = st.text_input(r'Решение $u_a$', 'np.exp(x[0]*x[1])', label_visibility='collapsed')
     u_ufl_text = u_a_text.replace('np.', 'ufl.')
 
-    '#### Конечные элементы'
-    finite_element = st.text_area(r'Тип конечных элементов', 'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)', label_visibility='collapsed')
-    #finite_element = eval(finite_element)
+    # '#### Конечные элементы'
+    # finite_element = st.text_area(r'Тип конечных элементов', 'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)', label_visibility='collapsed')
+    # #finite_element = eval(finite_element)
 
     '#### Конечные элементы для сравнения'
-    finite_element2 = st.text_area(r'Тип конечных элементов', 'basix.ufl.element("Lagrange", domain.topology.cell_name(), 2)', label_visibility='collapsed')
+    finite_element2 = st.text_area(r'Тип конечных элементов', 'basix.ufl.element("Lagrange", domain.topology.cell_name(), 4)', label_visibility='collapsed')
 
-    '#### Пресеты экспериментов'
-    option = st.selectbox("Пресеты экспериментов", ("четырехугольные", "дополнительный узел", "измельчение"), label_visibility='collapsed')
+    '#### Номер рисунка'
+    option = st.selectbox("Номер рисунка", ("4", "5", '6'), label_visibility='collapsed')
 
-    '#### Сетки на графиках'
+    #'#### Сетки на графиках'
     mesh_options = (
         'Базовая',
         '4-угольная',
@@ -85,18 +85,34 @@ with st.sidebar:
         'Uniform split'
     )
 
-    if option == "четырехугольные":
-        selected_options = ('Базовая', '4-угольная', '4-угольная 2')
-    elif option == "дополнительный узел":
-        selected_options = ('Перпендикуляры', 'Медианы', 'Биссектрисы', 'Высоты', '6 треугольников')
-    elif option == "измельчение":
-        selected_options = ('Базовая', 'quad split', 'Uniform split')
-
-    selection = st.multiselect("Сетки на графиках", mesh_options, selected_options, label_visibility='collapsed')
+    if option == "4":
+        selected_options = ('Базовая', 'Перпендикуляры', 'Базовая')
+        finite_elements = (
+            'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)',
+            'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)',
+            'basix.ufl.enriched_element([basix.ufl.element("Lagrange", domain.topology.cell_name(), 1), basix.ufl.element("Bubble", domain.topology.cell_name(), 3)])'
+        )
+    elif option == "5":
+        selected_options = ('Базовая', '6 треугольников', 'Базовая')
+        finite_elements = (
+            'basix.ufl.element("Lagrange", domain.topology.cell_name(), 2)',
+            'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)',
+            'basix.ufl.enriched_element([basix.ufl.element("Lagrange", domain.topology.cell_name(), 2), basix.ufl.element("Bubble", domain.topology.cell_name(), 3)])'
+        )
+    elif option == "6":
+        selected_options = ('Базовая', '4-угольная', 'quad split')
+        finite_elements = (
+            'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)',
+            'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)',
+            'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)',
+        )
+    selection = selected_options
+    #selection = st.multiselect("Сетки на графиках", mesh_options, selected_options, label_visibility='collapsed')
     selection_idxs = [mesh_options.index(i) for i in selection]
+    legend = ('а', 'б', 'в')
 
 
-def solve_poisson(mesh_name):
+def solve_poisson(mesh_name, finite_element):
     u_a = lambda x: eval(u_a_text)
 
     with dolfinx.io.XDMFFile(MPI.COMM_WORLD, mesh_name, "r") as xdmf:
@@ -108,12 +124,22 @@ def solve_poisson(mesh_name):
     uD.interpolate(u_a)
 
     tdim = domain.topology.dim
-    fdim = tdim - 1
-    domain.topology.create_connectivity(fdim, tdim)
-    boundary_facets = dolfinx.mesh.exterior_facet_indices(domain.topology)
+    # fdim = tdim - 1
+    # domain.topology.create_connectivity(fdim, tdim)
+    # boundary_facets = dolfinx.mesh.exterior_facet_indices(domain.topology)
+    # boundary_dofs = dolfinx.fem.locate_dofs_topological(V, fdim, boundary_facets)
+    # bc = dolfinx.fem.dirichletbc(uD, boundary_dofs)
 
-    boundary_dofs = dolfinx.fem.locate_dofs_topological(V, fdim, boundary_facets)
-    bc = dolfinx.fem.dirichletbc(uD, boundary_dofs)
+
+    def boundary_D(x):
+        return np.logical_or(np.isclose(x[0], 0), np.isclose(x[1], 0))
+
+
+    dofs_D = dolfinx.fem.locate_dofs_geometrical(V, boundary_D)
+    u_bc = dolfinx.fem.Function(V)
+    u_bc.interpolate(u_a)
+    bc = dolfinx.fem.dirichletbc(u_bc, dofs_D)
+
 
     u = ufl.TrialFunction(V)
     v = ufl.TestFunction(V)
@@ -126,7 +152,10 @@ def solve_poisson(mesh_name):
     f = - ufl.div(k * ufl.grad(u_ufl))
 
     a = ufl.dot(k * ufl.grad(u), ufl.grad(v)) * ufl.dx
-    L = f * v * ufl.dx
+    #L = f * v * ufl.dx
+    n = ufl.FacetNormal(domain) # ufl.as_vector([0, 1])
+    L = f * v * ufl.dx + ufl.dot(k*ufl.grad(u_ufl), n) * v * ufl.ds
+    #L = f * v * ufl.dx + ufl.dot(ufl.dot(k, ufl.grad(u_ufl)), n) * v * ufl.ds
 
     problem = dolfinx.fem.petsc.LinearProblem(a, L, bcs=[bc], petsc_options={"ksp_type": "preonly", "pc_type": "lu"})
     uh = problem.solve()
@@ -162,8 +191,8 @@ data = []
 for row in mesh_names_xdmf:
     data.append([])
 
-    for i in selection_idxs:
-        data[-1].append(solve_poisson(row[i]))
+    for i, finite_element in zip(selection_idxs, finite_elements):
+        data[-1].append(solve_poisson(row[i], finite_element))
 
         complete += 1
         progress_bar.progress(complete / (number_of_sets * number_of_different_meshes), text=progress_text)
@@ -189,7 +218,7 @@ for tab, x, xlabel in zip(tabs, range(3), ('Неизвестные', 'Узлы',
 
                 plt.xscale('log')
                 plt.yscale('log')
-                plt.legend(selection)
+                plt.legend(legend)
 
                 st.pyplot(plt.gcf())
         
@@ -203,6 +232,6 @@ for tab, x, xlabel in zip(tabs, range(3), ('Неизвестные', 'Узлы',
 
             plt.xscale('log')
             plt.yscale('log')
-            plt.legend(selection)
+            plt.legend(legend)
 
             st.pyplot(plt.gcf())

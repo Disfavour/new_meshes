@@ -67,7 +67,10 @@ with st.sidebar:
         'Медианы',
         'Биссектрисы',
         'Высоты',
-        'split',
+        'quad split',
+        '6 треугольников',
+        'Uniform split',
+        'triangulation',
     )
     selection = st.multiselect("Сетки на графиках", mesh_options, mesh_options, label_visibility='collapsed')
     selection_idxs = [mesh_options.index(i) for i in selection]
@@ -80,7 +83,10 @@ mesh_names = [
         f'{name}_centroid',
         f'{name}_incenter',
         f'{name}_orthocenter',
-        f'{name}_split_quadrangles'
+        f'{name}_split_quadrangles',
+        f'{name}_circumcenter_6',
+        f'{name}_uniform_split',
+        f'{name}_triangulation',
     ]
 number_of_different_meshes = len(mesh_names)
 descriptions = (
@@ -92,6 +98,9 @@ descriptions = (
     '#### Пересечение биссектрис',
     '#### Пересечение высот',
     '#### Четырехугольная split',
+    '#### 6 треугольников',
+    '#### Uniform split',
+    '#### Триангуляция Делоне+Вороной',
 )
 
 #mesh_names_msh = [os.path.join(meshes_msh_dir, f'{mesh_name}.msh') for mesh_name in mesh_names]

@@ -4,9 +4,15 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import PolyCollection
 import sys
 sys.path.append('mesh_generation')
+sys.path.append('computations')
 import utility
 import meshio
 import matplotlib.patches as patches
+from mpi4py import MPI
+import dolfinx
+import ufl
+import basix.ufl
+import poisson_article_Dirichlet, poisson_article_mixed
 
 
 def get_Voronoi(triangle_mesh):
@@ -208,14 +214,14 @@ def one_triangle(triangle_mesh, triangle_tag, fname, figsize, marker_size, radiu
     plt.close()
 
 
-def triangles_3(circumcenter_mesh, triangle_mesh, triangle_tag, small_triangle_tag, fname, figsize, marker_size, radius_multiplier):
+def triangles_3(circumcenter_mesh, triangle_mesh, triangle_tag, small_triangle_tag, fname, figsize, marker_size, radius_multiplier, ntriangles):
     circumcenter_cells, circumcenter_nodes, boundary = get_cells_and_nodes(circumcenter_mesh)
     Delaunay_cells, Delaunay_nodes, boundary = get_cells_and_nodes(triangle_mesh)
     Voronoi_cells, Voronoi_nodes = get_Voronoi(triangle_mesh)
 
     fig, ax = plt.subplots(figsize=figsize)
 
-    facecolors = ['none' if i != small_triangle_tag else (0, 0, 1, 0.2) for i in range(circumcenter_cells.shape[0])]
+    #facecolors = ['none' if i != small_triangle_tag else (0, 0, 1, 0.2) for i in range(circumcenter_cells.shape[0])]
 
     #facecolors = ['none' if i not in range(triangle_tag*3, (triangle_tag + 1)*3) else (0, 0, 1, 0.2) for i in range(circumcenter_cells.shape[0])]
     #facecolors = ['none' if i not in range(triangle_tag*6, (triangle_tag + 1)*6) else (0, 0, 1, 0.2) for i in range(circumcenter_cells.shape[0])] 
@@ -224,8 +230,8 @@ def triangles_3(circumcenter_mesh, triangle_mesh, triangle_tag, small_triangle_t
     # facecolors[small_triangle_tag] = (0, 0, 1, 0.4)
 
     #triangle6 v3
-    #facecolors = ['none' if i not in range(triangle_tag*6, (triangle_tag + 1)*6) else (0, 0, 1, 0.2) for i in range(circumcenter_cells.shape[0])]
-    #facecolors[small_triangle_tag] = (0, 0, 1, 0.4)
+    facecolors = ['none' if i not in range(triangle_tag*ntriangles, (triangle_tag + 1)*ntriangles) else (0, 0, 1, 0.2) for i in range(circumcenter_cells.shape[0])]
+    facecolors[small_triangle_tag] = (0, 0, 1, 0.4)
 
     pc = PolyCollection(circumcenter_cells, closed=True, facecolors=facecolors, edgecolors='blue')
     boundary_pc = PolyCollection(boundary, closed=True, facecolors='none', edgecolors='k')
@@ -396,6 +402,129 @@ def one_triangle_order_2_bubble(uniform_split_mesh, triangle_mesh, triangle_tag,
     plt.close()
 
 
+def image_4(k, fnames, figsize):
+    k = ufl.as_matrix(k)
+    
+    lagrange = basix.ufl.element("Lagrange", 'triangle', 1)
+    enriched_bubble = basix.ufl.enriched_element([basix.ufl.element("Lagrange", 'triangle', 1), basix.ufl.element("Bubble", 'triangle', 3)])
+
+    data = []
+    for i in range(1, 11):
+        data.append([])
+        
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_triangle.msh')
+        results = poisson_article_mixed.solve(mesh_name, lagrange, k)
+        data[-1].append(results)
+
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_circumcenter.msh')
+        results = poisson_article_mixed.solve(mesh_name, lagrange, k)
+        data[-1].append(results)
+
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_triangle.msh')
+        results = poisson_article_mixed.solve(mesh_name, enriched_bubble, k)
+        data[-1].append(results)
+    
+    data = np.array(data)
+
+    for fname, error, i in zip(fnames, ('$L^2$', r'$L^{\infty}$', '$H_0^1$'), range(3, 6)):
+        fig, ax = plt.subplots(figsize=figsize)
+
+        for j, lw, ms in zip(range(data.shape[1]), [1.5, 1.5*3, 1.5], [6, 6*np.sqrt(3), 6]):
+            ax.plot(data[:, j, 0], data[:, j, i], '-o', lw=lw, ms=ms)
+        
+        ax.set_xlabel("$n$")
+        ax.set_ylabel(error)
+        ax.grid()
+
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.legend(['а', 'б', 'в'])
+
+        fig.tight_layout()
+        fig.savefig(fname, transparent=True)
+        plt.close()
+
+
+def image_5(k, fnames, figsize):
+    k = ufl.as_matrix(k)
+
+    data = []
+    for i in range(1, 11):
+        data.append([])
+        
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_triangle.msh')
+        results = poisson_article_mixed.solve(mesh_name, basix.ufl.element("Lagrange", 'triangle', 2), k)
+        data[-1].append(results)
+
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_circumcenter_6.msh')
+        results = poisson_article_mixed.solve(mesh_name, basix.ufl.element("Lagrange", 'triangle', 1), k)
+        data[-1].append(results)
+
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_triangle.msh')
+        results = poisson_article_mixed.solve(mesh_name, basix.ufl.enriched_element([basix.ufl.element("Lagrange", 'triangle', 2), basix.ufl.element("Bubble", 'triangle', 3)]), k)
+        data[-1].append(results)
+    
+    data = np.array(data)
+
+    for fname, error, i in zip(fnames, ('$L^2$', r'$L^{\infty}$', '$H_0^1$'), range(3, 6)):
+        fig, ax = plt.subplots(figsize=figsize)
+
+        for j, lw, ms in zip(range(data.shape[1]), [1.5, 1.5, 1.5], [6, 6, 6]):
+            ax.plot(data[:, j, 0], data[:, j, i], '-o', lw=lw, ms=ms)
+        
+        ax.set_xlabel("$n$")
+        ax.set_ylabel(error)
+        ax.grid()
+
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.legend(['а', 'б', 'в'])
+
+        fig.tight_layout()
+        fig.savefig(fname, transparent=True)
+        plt.close()
+
+
+def image_6(k, fnames, figsize):
+    k = ufl.as_matrix(k)
+
+    data = []
+    for i in range(1, 11):
+        data.append([])
+        
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_triangle.msh')
+        results = poisson_article_mixed.solve(mesh_name, basix.ufl.element("Lagrange", 'triangle', 1), k)
+        data[-1].append(results)
+
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_quadrangle.msh')
+        results = poisson_article_mixed.solve(mesh_name, basix.ufl.element("Lagrange", 'quadrilateral', 1), k)
+        data[-1].append(results)
+
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_split_quadrangles.msh')
+        results = poisson_article_mixed.solve(mesh_name, basix.ufl.element("Lagrange", 'triangle', 1), k)
+        data[-1].append(results)
+    
+    data = np.array(data)
+
+    for fname, error, i in zip(fnames, ('$L^2$', r'$L^{\infty}$', '$H_0^1$'), range(3, 6)):
+        fig, ax = plt.subplots(figsize=figsize)
+
+        for j, lw, ms in zip(range(data.shape[1]), [1.5, 1.5, 1.5], [6, 6, 6]):
+            ax.plot(data[:, j, 0], data[:, j, i], '-o', lw=lw, ms=ms)
+        
+        ax.set_xlabel("$n$")
+        ax.set_ylabel(error)
+        ax.grid()
+
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.legend(['а', 'б', 'в'])
+
+        fig.tight_layout()
+        fig.savefig(fname, transparent=True)
+        plt.close()
+
+
 if __name__ == '__main__':
     import os
 
@@ -423,14 +552,50 @@ if __name__ == '__main__':
 
     one_triangle(triangle_mesh, triangle_tag, os.path.join(article_dir, 'one_triangle.pdf'), figsize_circle, marker_size, radius_multiplier)
     triangles_3(os.path.join('meshes', 'msh', 'rectangle_1_circumcenter.msh'), triangle_mesh, triangle_tag, small_triangle_tag,
-                           os.path.join(article_dir, 'triangles_3.pdf'), figsize_circle, marker_size, radius_multiplier)
+                           os.path.join(article_dir, 'triangles_3.pdf'), figsize_circle, marker_size, radius_multiplier, 3)
     one_triangle_bubble(triangle_mesh, triangle_tag, os.path.join(article_dir, 'one_triangle_bubble.pdf'), figsize_circle, marker_size, radius_multiplier)
 
     one_triangle_order_2(uniform_split_mesh, triangle_mesh, triangle_tag, os.path.join(article_dir, 'one_triangle_order_2.pdf'), figsize_circle, marker_size, radius_multiplier)
     triangles_3(triangle6_mesh, triangle_mesh, triangle_tag, very_small_triangle_tag,
-                           os.path.join(article_dir, 'triangles_6.pdf'), figsize_circle, marker_size, radius_multiplier)
+                           os.path.join(article_dir, 'triangles_6.pdf'), figsize_circle, marker_size, radius_multiplier, 6)
     one_triangle_order_2_bubble(uniform_split_mesh, triangle_mesh, triangle_tag, os.path.join(article_dir, 'one_triangle_order_2_bubble.pdf'), figsize_circle, marker_size, radius_multiplier)
 
+    figsize=(6.4, 3.6)
+
+    ks = [
+        [
+            [1, 0],
+            [0, 1]
+        ],
+        [
+            [1, 30],
+            [30, 1000]
+        ]
+    ]
+    for i, k in enumerate(ks, 1):
+        j = 4
+        fnames = [
+            os.path.join(article_dir, f'image_{j}_L2_k{i}.pdf'),
+            os.path.join(article_dir, f'image_{j}_Lmax_k{i}.pdf'),
+            os.path.join(article_dir, f'image_{j}_H01_k{i}.pdf')
+        ]
+        image_4(k, fnames, figsize)
+
+        j = 5
+        fnames = [
+            os.path.join(article_dir, f'image_{j}_L2_k{i}.pdf'),
+            os.path.join(article_dir, f'image_{j}_Lmax_k{i}.pdf'),
+            os.path.join(article_dir, f'image_{j}_H01_k{i}.pdf')
+        ]
+        image_5(k, fnames, figsize)
+
+        j = 6
+        fnames = [
+            os.path.join(article_dir, f'image_{j}_L2_k{i}.pdf'),
+            os.path.join(article_dir, f'image_{j}_Lmax_k{i}.pdf'),
+            os.path.join(article_dir, f'image_{j}_H01_k{i}.pdf')
+        ]
+        image_6(k, fnames, figsize)
 
     #get_Voronoi(triangle_mesh)
     # точки вороного соответствуют номерам треугольников (по построению)

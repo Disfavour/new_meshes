@@ -36,20 +36,12 @@ mesh_names = [
         f'{name}_{i}_centroid',
         f'{name}_{i}_incenter',
         f'{name}_{i}_orthocenter',
-        f'{name}_{i}_split_quadrangles'
+        f'{name}_{i}_split_quadrangles',
+        f'{name}_{i}_circumcenter_6',
+        f'{name}_{i}_uniform_split'
     ] for i in range(1, number_of_sets + 1)
 ]
 number_of_different_meshes = len(mesh_names[0])
-descriptions = (
-    '#### 1 Оптимизированная треугольная',
-    '#### 2 Четырехугольная',
-    '#### 3 Маленькие четырехугольники',
-    '#### 4 Пересечение перпендикуляров',
-    '#### 5 Пересечение медиан',
-    '#### 6 Пересечение биссектрис',
-    '#### 7 Пересечение высот',
-    '#### 8 Разделенная четырехугольная',
-)
 
 mesh_names_xdmf = [[os.path.join(meshes_xdmf_dir, f'{mesh_name}.xdmf') for mesh_name in row] for row in mesh_names]
 #mesh_names_npz = [[os.path.join(meshes_xdmf_dir, f'{mesh_name}.npz') for mesh_name in row] for row in mesh_names]
@@ -68,8 +60,8 @@ with st.sidebar:
     u_a_text = st.text_input(r'Решение $u_a$', 'np.exp(x[0]*x[1])', label_visibility='collapsed')
     u_ufl_text = u_a_text.replace('np.', 'ufl.')
 
-    '#### Конечные элементы для базовой'
-    base_finite_element_str = st.text_area(r'Конечные элементы для базовой сетки',
+    '#### Конечные элементы bubble enriched'
+    bubble_finite_element_str = st.text_area(r'Конечные элементы для базовой сетки',
                                   'basix.ufl.enriched_element([basix.ufl.element("Lagrange", domain.topology.cell_name(), 1), basix.ufl.element("Bubble", domain.topology.cell_name(), 3)])',
                                   label_visibility='collapsed')
 
@@ -89,7 +81,9 @@ with st.sidebar:
         'Медианы',
         'Биссектрисы',
         'Высоты',
-        'split',
+        'quad split',
+        '6 треугольников',
+        'Uniform split'
     )
 
     mesh_options = (
@@ -98,8 +92,8 @@ with st.sidebar:
         'Медианы',
         'Биссектрисы',
         'Высоты',
-        'split',
     )
+
     selection = st.multiselect("Сетки на графиках", mesh_options, mesh_options, label_visibility='collapsed')
     selection_idxs = [all_mesh_options.index(i) for i in selection]
 
@@ -165,22 +159,27 @@ complete = 0.0
 progress_text = 'Вычисления'
 progress_bar = st.progress(complete, text=progress_text)
 
+data_bubble = []
 data = []
 for row in mesh_names_xdmf:
     data.append([])
+    data_bubble.append(solve_poisson(row[0], bubble_finite_element_str, finite_element_compare_str))
 
     for i in selection_idxs:
         # базовая треугольная
-        if i == 0:
-            data[-1].append(solve_poisson(row[i], base_finite_element_str, finite_element_compare_str))
-        else:
-            data[-1].append(solve_poisson(row[i], finite_element_str, finite_element_compare_str))
+        # if i == 0:
+        #     data[-1].append(solve_poisson(row[i], base_finite_element_str, finite_element_compare_str))
+        # else:
+        #     data[-1].append(solve_poisson(row[i], finite_element_str, finite_element_compare_str))
+
+        data[-1].append(solve_poisson(row[i], finite_element_str, finite_element_compare_str))
 
         complete += 1
         progress_bar.progress(complete / (number_of_sets * number_of_different_meshes), text=progress_text)
 
 progress_bar.empty()
 
+data_bubble = np.array(data_bubble)
 data = np.array(data)
 
 tabs = st.tabs(('Неизвестные', 'Узлы', 'Ячейки'))
@@ -192,6 +191,7 @@ for tab, x, xlabel in zip(tabs, range(3), ('Неизвестные', 'Узлы',
         for column, error, i in zip(columns, ('$L^2$', r'$L^{\infty}$', '$H_0^1$'), range(3, 6)):
             with column:
                 plt.figure(figsize=(6.4, 3.6), dpi=300, tight_layout=True)
+                plt.plot(data_bubble[:, x], data_bubble[:, i], '-o')
                 plt.plot(data[:, :, x], data[:, :, i], '-o')
 
                 plt.xlabel(xlabel)
@@ -200,12 +200,13 @@ for tab, x, xlabel in zip(tabs, range(3), ('Неизвестные', 'Узлы',
 
                 plt.xscale('log')
                 plt.yscale('log')
-                plt.legend(selection)
+                plt.legend(['Базовая bubble enriched'] + selection)
 
                 st.pyplot(plt.gcf())
         
         with st.columns((0.25, 0.5, 0.25))[1]:
             plt.figure(figsize=(6.4, 3.6), dpi=300, tight_layout=True)
+            plt.plot(data_bubble[:, x], data_bubble[:, 5], '-o')
             plt.plot(data[:, :, x], data[:, :, 5], '-o')
 
             plt.xlabel(xlabel)
@@ -214,6 +215,6 @@ for tab, x, xlabel in zip(tabs, range(3), ('Неизвестные', 'Узлы',
 
             plt.xscale('log')
             plt.yscale('log')
-            plt.legend(selection)
+            plt.legend(['Базовая bubble enriched'] + selection)
 
             st.pyplot(plt.gcf())
