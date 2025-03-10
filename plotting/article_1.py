@@ -13,6 +13,8 @@ import dolfinx
 import ufl
 import basix.ufl
 import poisson_article_Dirichlet, poisson_article_mixed
+#import matplotlib
+#matplotlib.rcParams.update({'font.size': 20})
 
 
 def get_Voronoi(triangle_mesh):
@@ -402,7 +404,7 @@ def one_triangle_order_2_bubble(uniform_split_mesh, triangle_mesh, triangle_tag,
     plt.close()
 
 
-def image_4(k, fnames, figsize):
+def image_4(k, fnames, figsize, scale_limits):
     k = ufl.as_matrix(k)
     
     lagrange = basix.ufl.element("Lagrange", 'triangle', 1)
@@ -426,13 +428,13 @@ def image_4(k, fnames, figsize):
     
     data = np.array(data)
 
-    for fname, error, i in zip(fnames, ('$L^2$', r'$L^{\infty}$', '$H_0^1$'), range(3, 6)):
+    for fname, error, i in zip(fnames, ('$L_2$', r'$L_{\infty}$', '$H_0^1$'), range(3, 6)):
         fig, ax = plt.subplots(figsize=figsize)
 
         for j, lw, ms in zip(range(data.shape[1]), [1.5, 1.5*3, 1.5], [6, 6*np.sqrt(3), 6]):
             ax.plot(data[:, j, 0], data[:, j, i], '-o', lw=lw, ms=ms)
         
-        ax.set_xlabel("$n$")
+        ax.set_xlabel("$M$")
         ax.set_ylabel(error)
         ax.grid()
 
@@ -440,12 +442,22 @@ def image_4(k, fnames, figsize):
         ax.set_yscale('log')
         ax.legend(['а', 'б', 'в'])
 
+        ymin, ymax = data[:, :, i].min(), data[:, :, i].max()
+        ymin_degree, ymax_degree = np.floor(np.log10(ymin)), np.ceil(np.log10(ymax))
+        ymin = 10 ** ymin_degree
+        ymax = 10 ** ymax_degree
+        ax.set_ylim(ymin, ymax)
+        ax.set_yticks([10 ** i for i in range(int(ymin_degree), int(ymax_degree) + 1)])
+
+        #xmin, xmax, ymin, ymax = ax.axis()
+        #ax.axis([xmin, xmax, ymin / scale_limits, ymax * scale_limits])
+
         fig.tight_layout()
         fig.savefig(fname, transparent=True)
         plt.close()
 
 
-def image_5(k, fnames, figsize):
+def image_5(k, fnames, figsize, scale_limits):
     k = ufl.as_matrix(k)
 
     data = []
@@ -466,13 +478,13 @@ def image_5(k, fnames, figsize):
     
     data = np.array(data)
 
-    for fname, error, i in zip(fnames, ('$L^2$', r'$L^{\infty}$', '$H_0^1$'), range(3, 6)):
+    for fname, error, i in zip(fnames, ('$L_2$', r'$L_{\infty}$', '$H_0^1$'), range(3, 6)):
         fig, ax = plt.subplots(figsize=figsize)
 
         for j, lw, ms in zip(range(data.shape[1]), [1.5, 1.5, 1.5], [6, 6, 6]):
             ax.plot(data[:, j, 0], data[:, j, i], '-o', lw=lw, ms=ms)
         
-        ax.set_xlabel("$n$")
+        ax.set_xlabel("$M$")
         ax.set_ylabel(error)
         ax.grid()
 
@@ -480,12 +492,22 @@ def image_5(k, fnames, figsize):
         ax.set_yscale('log')
         ax.legend(['а', 'б', 'в'])
 
+        ymin, ymax = data[:, :, i].min(), data[:, :, i].max()
+        ymin_degree, ymax_degree = np.floor(np.log10(ymin)), np.ceil(np.log10(ymax))
+        ymin = 10 ** ymin_degree
+        ymax = 10 ** ymax_degree
+        ax.set_ylim(ymin, ymax)
+        ax.set_yticks([10 ** i for i in range(int(ymin_degree), int(ymax_degree) + 1)])
+
+        #xmin, xmax, ymin, ymax = ax.axis()
+        #ax.axis([xmin, xmax, ymin / scale_limits, ymax * scale_limits])
+
         fig.tight_layout()
         fig.savefig(fname, transparent=True)
         plt.close()
 
 
-def image_6(k, fnames, figsize):
+def image_6(k, fnames, figsize, scale_limits):
     k = ufl.as_matrix(k)
 
     data = []
@@ -506,22 +528,39 @@ def image_6(k, fnames, figsize):
     
     data = np.array(data)
 
-    for fname, error, i in zip(fnames, ('$L^2$', r'$L^{\infty}$', '$H_0^1$'), range(3, 6)):
+    for fname, error, i in zip(fnames, ('$L_2$', r'$L_{\infty}$', '$H_0^1$'), range(3, 6)):
         fig, ax = plt.subplots(figsize=figsize)
 
         for j, lw, ms in zip(range(data.shape[1]), [1.5, 1.5, 1.5], [6, 6, 6]):
             ax.plot(data[:, j, 0], data[:, j, i], '-o', lw=lw, ms=ms)
         
-        ax.set_xlabel("$n$")
-        ax.set_ylabel(error)
+        ax.set_xlabel("$M$")#, fontsize=20)
+        ax.set_ylabel(error)#, fontsize=20)
         ax.grid()
 
         ax.set_xscale('log')
         ax.set_yscale('log')
-        ax.legend(['а', 'б', 'в'])
+        ax.legend(['а', 'б', 'в'])#, fontsize=20)
+
+        ymin, ymax = data[:, :, i].min(), data[:, :, i].max()
+        ymin_degree, ymax_degree = np.floor(np.log10(ymin)), np.ceil(np.log10(ymax))
+        ymin = 10 ** ymin_degree
+        ymax = 10 ** ymax_degree
+        ax.set_ylim(ymin, ymax)
+        ax.set_yticks([10 ** i for i in range(int(ymin_degree), int(ymax_degree) + 1)])
+
+        # if miny / ymin < scale_limits:
+        #     ymin = 10 ** (np.floor(np.log10(miny)) - 1)
+        # if ymax / maxy < scale_limits:
+        #     ymax = 10 ** (np.ceil(np.log10(maxy)) + 1)
+
+        
+
+        #xmin, xmax, ymin, ymax = ax.axis()
+        #ax.axis([xmin, xmax, ymin / scale_limits, ymax * scale_limits])
 
         fig.tight_layout()
-        fig.savefig(fname, transparent=True)
+        fig.savefig(fname, transparent=True)#, bbox_inches="tight")
         plt.close()
 
 
@@ -560,7 +599,12 @@ if __name__ == '__main__':
                            os.path.join(article_dir, 'triangles_6.pdf'), figsize_circle, marker_size, radius_multiplier, 6)
     one_triangle_order_2_bubble(uniform_split_mesh, triangle_mesh, triangle_tag, os.path.join(article_dir, 'one_triangle_order_2_bubble.pdf'), figsize_circle, marker_size, radius_multiplier)
 
-    figsize=(6.4, 3.6)
+    figsize=np.array((6.4, 3.6))# / 1.6
+    font_size = 10 * 2
+    import matplotlib
+    matplotlib.rcParams['font.size'] = '16'
+
+    scale_limits = 1.5 # не используется
 
     ks = [
         [
@@ -579,7 +623,7 @@ if __name__ == '__main__':
             os.path.join(article_dir, f'image_{j}_Lmax_k{i}.pdf'),
             os.path.join(article_dir, f'image_{j}_H01_k{i}.pdf')
         ]
-        image_4(k, fnames, figsize)
+        image_4(k, fnames, figsize, scale_limits)
 
         j = 5
         fnames = [
@@ -587,7 +631,7 @@ if __name__ == '__main__':
             os.path.join(article_dir, f'image_{j}_Lmax_k{i}.pdf'),
             os.path.join(article_dir, f'image_{j}_H01_k{i}.pdf')
         ]
-        image_5(k, fnames, figsize)
+        image_5(k, fnames, figsize, scale_limits)
 
         j = 6
         fnames = [
@@ -595,7 +639,7 @@ if __name__ == '__main__':
             os.path.join(article_dir, f'image_{j}_Lmax_k{i}.pdf'),
             os.path.join(article_dir, f'image_{j}_H01_k{i}.pdf')
         ]
-        image_6(k, fnames, figsize)
+        image_6(k, fnames, figsize, scale_limits)
 
     #get_Voronoi(triangle_mesh)
     # точки вороного соответствуют номерам треугольников (по построению)
