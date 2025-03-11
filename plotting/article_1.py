@@ -92,7 +92,7 @@ def Delaunay_mesh(triangle_mesh, fname, figsize, marker_size):
     ax.add_collection(pc)
     ax.add_collection(boundary_pc)
 
-    ax.plot(Delaunay_nodes[:, 0], Delaunay_nodes[:, 1], 'bo', ms=marker_size)
+    ax.plot(Delaunay_nodes[:, 0], Delaunay_nodes[:, 1], 'bo')#, ms=marker_size)
 
     ax.axis('scaled')
     ax.set_axis_off()
@@ -404,6 +404,238 @@ def one_triangle_order_2_bubble(uniform_split_mesh, triangle_mesh, triangle_tag,
     plt.close()
 
 
+# решил взять просто радиус описанного треугольника
+# def image_10_1(triangle_mesh, triangle_tag, fname, figsize, marker_size, center, radius):
+#     Delaunay_cells, Delaunay_nodes, boundary = get_cells_and_nodes(triangle_mesh)
+#     Voronoi_cells, Voronoi_nodes = get_Voronoi(triangle_mesh)
+
+#     fig, ax = plt.subplots(figsize=figsize)
+
+#     facecolors = ['none' if i != triangle_tag else (0, 0, 1, 0.2) for i in range(Delaunay_cells.shape[0])]
+#     pc = PolyCollection(Delaunay_cells, closed=True, facecolors=facecolors, edgecolors='blue')
+#     boundary_pc = PolyCollection(boundary, closed=True, facecolors='none', edgecolors='k')
+
+#     ax.add_collection(pc)
+#     ax.add_collection(boundary_pc)
+
+#     Delaunay_lines = ax.plot(Delaunay_nodes[:, 0], Delaunay_nodes[:, 1], 'bo', ms=marker_size)
+#     Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'ro', ms=marker_size)
+
+#     #circumcenter = Voronoi_nodes[triangle_tag]
+#     #radius = np.linalg.norm(circumcenter - Delaunay_cells[triangle_tag][0]) * radius_multiplier
+
+#     circle = patches.Circle(center, radius=radius, color=(1, 0, 0, 0.1), transform=ax.transData)
+#     #ax.add_patch(circle)
+
+#     pc.set_clip_path(circle)
+#     boundary_pc.set_clip_path(circle)
+#     [o.set_clip_path(circle) for o in Delaunay_lines]
+#     [o.set_clip_path(circle) for o in Voronoi_lines]
+
+#     min_x, min_y = center - radius
+#     max_x, max_y = center + radius
+
+#     ax.axis([min_x, max_x, min_y, max_y])
+#     ax.set_aspect(1)
+
+#     #ax.axis('scaled')
+#     ax.set_axis_off()
+
+#     fig.tight_layout()
+
+#     fig.savefig(fname, transparent=True)
+#     plt.close()
+
+
+def image_10_2(quad_mesh, triangle_mesh, triangle_tag, quadrangle_tag, fname, figsize, marker_size, radius_multiplier):
+    quad_cells, quad_nodes, boundary = get_cells_and_nodes(quad_mesh)
+    Delaunay_cells, Delaunay_nodes, boundary = get_cells_and_nodes(triangle_mesh)
+    Voronoi_cells, Voronoi_nodes = get_Voronoi(triangle_mesh)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    facecolors = ['none' if i != quadrangle_tag else (0, 0, 1, 0.2) for i in range(quad_cells.shape[0])]
+    pc = PolyCollection(quad_cells, closed=True, facecolors=facecolors, edgecolors='m')
+    boundary_pc = PolyCollection(boundary, closed=True, facecolors='none', edgecolors='k')
+
+    ax.add_collection(pc)
+    ax.add_collection(boundary_pc)
+
+    Delaunay_lines = ax.plot(Delaunay_nodes[:, 0], Delaunay_nodes[:, 1], 'bo', ms=marker_size)
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'ro', ms=marker_size)
+
+    circumcenter = Voronoi_nodes[triangle_tag]
+    radius = np.linalg.norm(circumcenter - Delaunay_cells[triangle_tag][0]) * radius_multiplier
+
+    circle = patches.Circle(circumcenter, radius=radius, color=(1, 0, 0, 0.1), transform=ax.transData)
+    #ax.add_patch(circle)
+
+    pc.set_clip_path(circle)
+    boundary_pc.set_clip_path(circle)
+    [o.set_clip_path(circle) for o in Delaunay_lines]
+    [o.set_clip_path(circle) for o in Voronoi_lines]
+
+    min_x, min_y = circumcenter - radius
+    max_x, max_y = circumcenter + radius
+
+    ax.axis([min_x, max_x, min_y, max_y])
+    ax.set_aspect(1)
+
+    #ax.axis('scaled')
+    ax.set_axis_off()
+
+    fig.tight_layout()
+
+    fig.savefig(fname, transparent=True)
+    plt.close()
+
+
+def image_10_3(split_quad_mesh, triangle_mesh, triangle_tag, triangle_tag2, fname, figsize, marker_size, radius_multiplier):
+    split_quad_cells, split_quad_nodes, boundary = get_cells_and_nodes(split_quad_mesh)
+    Delaunay_cells, Delaunay_nodes, boundary = get_cells_and_nodes(triangle_mesh)
+    Voronoi_cells, Voronoi_nodes = get_Voronoi(triangle_mesh)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    #facecolors = ['none' if i != triangle_tag // 2 else (0, 0, 1, 0.2) for i in range(quad_cells.shape[0])]
+    #pc_quad = PolyCollection(quad_cells, closed=True, facecolors=facecolors, edgecolors='none')
+    facecolors = [(0, 0, 1, 0.2) if i in (triangle_tag // 2 * 2, triangle_tag // 2 * 2 + 1) else 'none' for i in range(split_quad_cells.shape[0])]
+    facecolors[triangle_tag] = (0, 0, 1, 0.4)
+    pc_split = PolyCollection(split_quad_cells, closed=True, facecolors=facecolors, edgecolors='m')
+    boundary_pc = PolyCollection(boundary, closed=True, facecolors='none', edgecolors='k')
+
+    #ax.add_collection(pc_quad)
+    ax.add_collection(pc_split)
+    ax.add_collection(boundary_pc)
+
+    Delaunay_lines = ax.plot(Delaunay_nodes[:, 0], Delaunay_nodes[:, 1], 'bo', ms=marker_size)
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'ro', ms=marker_size)
+
+    circumcenter = Voronoi_nodes[triangle_tag2]
+    radius = np.linalg.norm(circumcenter - Delaunay_cells[triangle_tag2][0]) * radius_multiplier
+
+    circle = patches.Circle(circumcenter, radius=radius, color=(1, 0, 0, 0.1), transform=ax.transData)
+    #ax.add_patch(circle)
+
+    #pc_quad.set_clip_path(circle)
+    pc_split.set_clip_path(circle)
+    boundary_pc.set_clip_path(circle)
+    [o.set_clip_path(circle) for o in Delaunay_lines]
+    [o.set_clip_path(circle) for o in Voronoi_lines]
+
+    min_x, min_y = circumcenter - radius
+    max_x, max_y = circumcenter + radius
+
+    ax.axis([min_x, max_x, min_y, max_y])
+    ax.set_aspect(1)
+
+    #ax.axis('scaled')
+    ax.set_axis_off()
+
+    fig.tight_layout()
+
+    fig.savefig(fname, transparent=True)
+    plt.close()
+
+
+def image_13_2(quad_mesh, small_quad_mesh, triangle_mesh, quad_tag, triangle_tag, fname, figsize, marker_size, radius_multiplier):
+    quad_cells, quad_nodes, boundary = get_cells_and_nodes(quad_mesh)
+    small_quad_cells, small_quad_nodes, boundary = get_cells_and_nodes(small_quad_mesh)
+    Delaunay_cells, Delaunay_nodes, boundary = get_cells_and_nodes(triangle_mesh)
+    Voronoi_cells, Voronoi_nodes = get_Voronoi(triangle_mesh)
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    facecolors = ['none' if i != quad_tag else (0, 0, 1, 0.2) for i in range(quad_cells.shape[0])]
+    pc = PolyCollection(quad_cells, closed=True, facecolors=facecolors, edgecolors='m')
+    boundary_pc = PolyCollection(boundary, closed=True, facecolors='none', edgecolors='k')
+
+    ax.add_collection(pc)
+    ax.add_collection(boundary_pc)
+
+    bubble_lines = ax.plot(small_quad_nodes[:, 0], small_quad_nodes[:, 1], 'bo', ms=marker_size)
+    Delaunay_lines = ax.plot(Delaunay_nodes[:, 0], Delaunay_nodes[:, 1], 'bo', ms=marker_size)
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'ro', ms=marker_size)
+
+    circumcenter = Voronoi_nodes[triangle_tag]
+    radius = np.linalg.norm(circumcenter - Delaunay_cells[triangle_tag][0]) * radius_multiplier
+
+    circle = patches.Circle(circumcenter, radius=radius, color=(1, 0, 0, 0.1), transform=ax.transData)
+    #ax.add_patch(circle)
+
+    pc.set_clip_path(circle)
+    boundary_pc.set_clip_path(circle)
+    [o.set_clip_path(circle) for o in bubble_lines]
+    [o.set_clip_path(circle) for o in Delaunay_lines]
+    [o.set_clip_path(circle) for o in Voronoi_lines]
+
+    min_x, min_y = circumcenter - radius
+    max_x, max_y = circumcenter + radius
+
+    ax.axis([min_x, max_x, min_y, max_y])
+    ax.set_aspect(1)
+
+    #ax.axis('scaled')
+    ax.set_axis_off()
+
+    fig.tight_layout()
+
+    fig.savefig(fname, transparent=True)
+    plt.close()
+
+
+def image_13_3(small_quad_mesh, triangle_mesh, quadrangle_tag, fname, figsize, marker_size, radius_multiplier):
+    quad_cells, quad_nodes, boundary = get_cells_and_nodes(small_quad_mesh)
+    Delaunay_cells, Delaunay_nodes, boundary = get_cells_and_nodes(triangle_mesh)
+    Voronoi_cells, Voronoi_nodes = get_Voronoi(triangle_mesh)
+
+    triangle_tag = quadrangle_tag // 3
+
+    fig, ax = plt.subplots(figsize=figsize)
+
+    #facecolors = ['none' if i != triangle_tag // 2 else (0, 0, 1, 0.2) for i in range(quad_cells.shape[0])]
+    #pc_quad = PolyCollection(quad_cells, closed=True, facecolors=facecolors, edgecolors='none')
+    facecolors = [(0, 0, 1, 0.2) if i in range(triangle_tag * 3, (triangle_tag + 1) * 3) else 'none' for i in range(quad_cells.shape[0])]
+    facecolors[quadrangle_tag] = (0, 0, 1, 0.4)
+    pc = PolyCollection(quad_cells, closed=True, facecolors=facecolors, edgecolors='b')
+    boundary_pc = PolyCollection(boundary, closed=True, facecolors='none', edgecolors='k')
+
+    #ax.add_collection(pc_quad)
+    ax.add_collection(pc)
+    ax.add_collection(boundary_pc)
+
+    quad_lines = ax.plot(quad_nodes[:, 0], quad_nodes[:, 1], 'bo', ms=marker_size)
+    Delaunay_lines = ax.plot(Delaunay_nodes[:, 0], Delaunay_nodes[:, 1], 'bo', ms=marker_size)
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'ro', ms=marker_size)
+    
+    circumcenter = Voronoi_nodes[triangle_tag]
+    radius = np.linalg.norm(circumcenter - Delaunay_cells[triangle_tag][0]) * radius_multiplier
+
+    circle = patches.Circle(circumcenter, radius=radius, color=(1, 0, 0, 0.1), transform=ax.transData)
+    #ax.add_patch(circle)
+
+    #pc_quad.set_clip_path(circle)
+    pc.set_clip_path(circle)
+    boundary_pc.set_clip_path(circle)
+    [o.set_clip_path(circle) for o in quad_lines]
+    [o.set_clip_path(circle) for o in Delaunay_lines]
+    [o.set_clip_path(circle) for o in Voronoi_lines]
+
+    min_x, min_y = circumcenter - radius
+    max_x, max_y = circumcenter + radius
+
+    ax.axis([min_x, max_x, min_y, max_y])
+    ax.set_aspect(1)
+
+    #ax.axis('scaled')
+    ax.set_axis_off()
+
+    fig.tight_layout()
+
+    fig.savefig(fname, transparent=True)
+    plt.close()
+
+
 def image_4(k, fnames, figsize, scale_limits):
     k = ufl.as_matrix(k)
     
@@ -564,6 +796,63 @@ def image_6(k, fnames, figsize, scale_limits):
         plt.close()
 
 
+def image_13(k, fnames, figsize, scale_limits):
+    k = ufl.as_matrix(k)
+
+    data = []
+    for i in range(1, 11):
+        data.append([])
+        
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_quadrangle.msh')
+        results = poisson_article_mixed.solve(mesh_name, basix.ufl.element("Lagrange", 'quadrilateral', 1), k)
+        data[-1].append(results)
+
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_quadrangle.msh')
+        results = poisson_article_mixed.solve(mesh_name, basix.ufl.enriched_element([basix.ufl.element("Lagrange", 'quadrilateral', 1), basix.ufl.element("Bubble", 'quadrilateral', 3)]), k)
+        data[-1].append(results)
+
+        mesh_name = os.path.join('meshes', 'msh', f'rectangle_{i}_small_quadrangle.msh')
+        results = poisson_article_mixed.solve(mesh_name, basix.ufl.element("Lagrange", 'quadrilateral', 1), k)
+        data[-1].append(results)
+    
+    data = np.array(data)
+
+    for fname, error, i in zip(fnames, ('$L_2$', r'$L_{\infty}$', '$H_0^1$'), range(3, 6)):
+        fig, ax = plt.subplots(figsize=figsize)
+
+        for j, lw, ms in zip(range(data.shape[1]), [1.5, 1.5, 1.5], [6, 6, 6]):
+            ax.plot(data[:, j, 0], data[:, j, i], '-o', lw=lw, ms=ms)
+        
+        ax.set_xlabel("$M$")#, fontsize=20)
+        ax.set_ylabel(error)#, fontsize=20)
+        ax.grid()
+
+        ax.set_xscale('log')
+        ax.set_yscale('log')
+        ax.legend(['а', 'б', 'в'])#, fontsize=20)
+
+        ymin, ymax = data[:, :, i].min(), data[:, :, i].max()
+        ymin_degree, ymax_degree = np.floor(np.log10(ymin)), np.ceil(np.log10(ymax))
+        ymin = 10 ** ymin_degree
+        ymax = 10 ** ymax_degree
+        ax.set_ylim(ymin, ymax)
+        ax.set_yticks([10 ** i for i in range(int(ymin_degree), int(ymax_degree) + 1)])
+
+        # if miny / ymin < scale_limits:
+        #     ymin = 10 ** (np.floor(np.log10(miny)) - 1)
+        # if ymax / maxy < scale_limits:
+        #     ymax = 10 ** (np.ceil(np.log10(maxy)) + 1)
+
+        
+
+        #xmin, xmax, ymin, ymax = ax.axis()
+        #ax.axis([xmin, xmax, ymin / scale_limits, ymax * scale_limits])
+
+        fig.tight_layout()
+        fig.savefig(fname, transparent=True)#, bbox_inches="tight")
+        plt.close()
+
+
 if __name__ == '__main__':
     import os
 
@@ -575,7 +864,7 @@ if __name__ == '__main__':
     uniform_split_mesh = os.path.join('meshes', 'msh', 'rectangle_1_uniform_split.msh')
 
     figsize = np.array((1, 0.75)) * 5
-    marker_size = 4
+    marker_size = 6
 
     figsize_circle = np.array((1, 1)) * 5
     radius_multiplier = 1.2
@@ -598,6 +887,24 @@ if __name__ == '__main__':
     triangles_3(triangle6_mesh, triangle_mesh, triangle_tag, very_small_triangle_tag,
                            os.path.join(article_dir, 'triangles_6.pdf'), figsize_circle, marker_size, radius_multiplier, 6)
     one_triangle_order_2_bubble(uniform_split_mesh, triangle_mesh, triangle_tag, os.path.join(article_dir, 'one_triangle_order_2_bubble.pdf'), figsize_circle, marker_size, radius_multiplier)
+
+    # center, radius = np.array([0.66888747, 0.28479431]), 0.21235271386358628 * radius_multiplier
+    #center, radius = np.array([0.669, 0.285]), 0.212 * radius_multiplier
+
+    # image_10_1(triangle_mesh, triangle_tag, os.path.join(article_dir, '10-1.pdf'), figsize_circle, marker_size, center, radius)
+    # image_10_2(os.path.join('meshes', 'msh', 'rectangle_1_quadrangle.msh'), triangle_mesh, 18, os.path.join(article_dir, '10-2.pdf'), figsize_circle, marker_size, center, radius)
+    # image_10_3(os.path.join('meshes', 'msh', 'rectangle_1_split_quadrangles.msh'),
+    #            os.path.join('meshes', 'msh', 'rectangle_1_quadrangle.msh'),
+    #            triangle_mesh, 36, os.path.join(article_dir, '10-3.pdf'), figsize_circle, marker_size, center, radius)
+    
+    #image_10_1(triangle_mesh, triangle_tag, os.path.join(article_dir, '10-1.pdf'), figsize_circle, marker_size, radius_multiplier)
+    image_10_2(os.path.join('meshes', 'msh', 'rectangle_1_quadrangle.msh'), triangle_mesh, triangle_tag, 31, os.path.join(article_dir, '10-2.pdf'), figsize_circle, marker_size, radius_multiplier)
+    image_10_3(os.path.join('meshes', 'msh', 'rectangle_1_split_quadrangles.msh'),
+               triangle_mesh, 63, triangle_tag, os.path.join(article_dir, '10-3.pdf'), figsize_circle, marker_size, radius_multiplier)
+    
+    image_13_2(os.path.join('meshes', 'msh', 'rectangle_1_quadrangle.msh'), os.path.join('meshes', 'msh', 'rectangle_1_small_quadrangle.msh'),
+               triangle_mesh, 31, triangle_tag, os.path.join(article_dir, '13-2.pdf'), figsize_circle, marker_size, radius_multiplier)
+    image_13_3(os.path.join('meshes', 'msh', 'rectangle_1_small_quadrangle.msh'), triangle_mesh, 37, os.path.join(article_dir, '13-3.pdf'), figsize_circle, marker_size, radius_multiplier)
 
     figsize=np.array((6.4, 3.6))# / 1.6
     font_size = 10 * 2
@@ -640,6 +947,16 @@ if __name__ == '__main__':
             os.path.join(article_dir, f'image_{j}_H01_k{i}.pdf')
         ]
         image_6(k, fnames, figsize, scale_limits)
+
+        j = 13
+        fnames = [
+            os.path.join(article_dir, f'image_{j}_L2_k{i}.pdf'),
+            os.path.join(article_dir, f'image_{j}_Lmax_k{i}.pdf'),
+            os.path.join(article_dir, f'image_{j}_H01_k{i}.pdf')
+        ]
+        image_13(k, fnames, figsize, scale_limits)
+    
+    
 
     #get_Voronoi(triangle_mesh)
     # точки вороного соответствуют номерам треугольников (по построению)

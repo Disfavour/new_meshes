@@ -69,7 +69,7 @@ with st.sidebar:
     finite_element2 = st.text_area(r'Тип конечных элементов', 'basix.ufl.element("Lagrange", domain.topology.cell_name(), 4)', label_visibility='collapsed')
 
     '#### Номер рисунка'
-    option = st.selectbox("Номер рисунка", ("4", "5", '6'), label_visibility='collapsed')
+    option = st.selectbox("Номер рисунка", ("4", "5", '6', '13'), label_visibility='collapsed')
 
     #'#### Сетки на графиках'
     mesh_options = (
@@ -104,6 +104,13 @@ with st.sidebar:
         finite_elements = (
             'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)',
             'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)',
+            'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)',
+        )
+    elif option == "13":
+        selected_options = ('4-угольная', '4-угольная', '4-угольная 2')
+        finite_elements = (
+            'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)',
+            'basix.ufl.enriched_element([basix.ufl.element("Lagrange", domain.topology.cell_name(), 1), basix.ufl.element("Bubble", domain.topology.cell_name(), 3)])',
             'basix.ufl.element("Lagrange", domain.topology.cell_name(), 1)',
         )
     selection = selected_options

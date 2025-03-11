@@ -61,8 +61,8 @@ def solve(mesh_name, finite_element, k):
 if __name__ == '__main__':
     # cell types: triangle quadrilateral
     import os
-    mesh_name = os.path.join('meshes', 'msh', 'rectangle_1_triangle.msh')
-    finite_element = basix.ufl.enriched_element([basix.ufl.element("Lagrange", 'triangle', 1), basix.ufl.element("Bubble", 'triangle', 3)])
+    mesh_name = os.path.join('meshes', 'msh', 'rectangle_1_quadrangle.msh')
+    finite_element = basix.ufl.enriched_element([basix.ufl.element("Lagrange", 'quadrilateral', 1), basix.ufl.element("Bubble", 'quadrilateral', 3)])
     k = ufl.as_matrix([[1, 0],
                        [0, 1]])
-    solve(mesh_name, finite_element, k)
+    print(solve(mesh_name, finite_element, k))

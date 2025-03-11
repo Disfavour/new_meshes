@@ -4,20 +4,28 @@ import meshio
 import numpy as np
 import pickle
 
-
-mesh = meshio.read('meshes/msh/rectangle_1_triangle.msh')
+# rectangle_1_quadrangle.msh rectangle_1_split_quadrangles.msh rectangle_1_triangle
+mesh = meshio.read('meshes/msh/rectangle_1_small_quadrangle.msh')
 
 points = mesh.points[:, :2]
-quads = mesh.cells_dict['triangle']
+#quads = mesh.cells_dict['triangle']
+quads = mesh.cells[0].data
 
 quads_points = [
     np.array([points[j] for j in i])
     for i in quads
 ]
-print(quads_points)
+# print(quads_points)
 
-print(mesh.points)
-print(mesh.cells_dict['triangle'])
+# print(mesh.points)
+# print(mesh.cells_dict['quadrangle'])
+
+# 23 20 33 25
+# point_numbers = [23, 20, 33, 25]
+# points_boundary = points[point_numbers]
+# center = points_boundary.sum(axis=0) / len(point_numbers)
+# radius = np.linalg.norm(points_boundary - center, axis=1).max()
+# print(center, radius)
 
 plt.figure()
 ax = plt.gca()
