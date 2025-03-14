@@ -19,7 +19,8 @@ import poisson_article_Dirichlet, poisson_article_mixed
 # default figsize [6.4, 4.8] is ok
 figsize = np.array([6.4, 4.8]) / 3
 figsize_circle = np.array((1, 1)) * 1.6
-figsize_plot = np.array([6.4, 4.8]) / 1.6
+#figsize_plot = np.array([6.4, 4.8]) / 1.6
+figsize_plot = np.array((6.4, 3.6)) / 1.2 
 dpi = 600
 (min_x, min_y), (max_x, max_y) = (0, 0), (1, 0.75)
 boundary = np.array([
