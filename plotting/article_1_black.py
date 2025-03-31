@@ -16,11 +16,11 @@ import utility
 import poisson_article_Dirichlet, poisson_article_mixed
 
 
-# default figsize [6.4, 4.8] is ok
-figsize = np.array([6.4, 4.8]) / 3
-figsize_circle = np.array((1, 1)) * 1.6
+# default figsize [6.4, 4.8] is ok (6.4, 3.6)
+figsize = np.array([6.4, 4.8]) / 2
+figsize_circle = np.array((1, 1)) * 1.6 * 2
 #figsize_plot = np.array([6.4, 4.8]) / 1.6
-figsize_plot = np.array((6.4, 3.6)) / 1.2 
+figsize_plot = np.array([6.4, 4.8]) / 1.6
 dpi = 600
 (min_x, min_y), (max_x, max_y) = (0, 0), (1, 0.75)
 boundary = np.array([
@@ -39,6 +39,12 @@ os.makedirs(article_dir, exist_ok=True)
 
 triangle_tag = 12
 radius_multiplier = 1.2
+
+marker_2 = "x"
+
+rus_legend = ['а', 'б', 'в']
+eng_legend = ['a', 'b', 'c']
+legend = eng_legend
 
 
 def get_cells_and_nodes(mesh_file):
@@ -372,11 +378,11 @@ def image_5_3():
     plt.close()
 
 
-def image_10_1():
-    image_4_1(fname=os.path.join(article_dir, '10-1.png'))
+def image_8_1():
+    image_4_1(fname=os.path.join(article_dir, '8-1.png'))
 
 
-def image_10_2(fname=os.path.join(article_dir, '10-2.png')):
+def image_8_2(fname=os.path.join(article_dir, '8-2.png')):
     quad_cells, quad_nodes = get_cells_and_nodes(quadrangle_mesh)
     triangle_cells, triangle_nodes = get_cells_and_nodes(triangle_mesh)
     Voronoi_cells, Voronoi_nodes = get_Voronoi(triangle_mesh)
@@ -411,7 +417,7 @@ def image_10_2(fname=os.path.join(article_dir, '10-2.png')):
     plt.close()
 
 
-def image_10_3():
+def image_8_3():
     quad_cells, quad_nodes = get_cells_and_nodes(os.path.join('meshes', 'msh', 'rectangle_1_split_quadrangles.msh'))
     triangle_cells, triangle_nodes = get_cells_and_nodes(triangle_mesh)
     Voronoi_cells, Voronoi_nodes = get_Voronoi(triangle_mesh)
@@ -443,15 +449,15 @@ def image_10_3():
     ax.set_aspect(1)
     ax.set_axis_off()
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '10-3.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '8-3.png'), transparent=True)
     plt.close()
 
 
-def image_13_1():
-    image_10_2(fname=os.path.join(article_dir, '13-1.png'))
+def image_10_1():
+    image_8_2(fname=os.path.join(article_dir, '10-1.png'))
 
 
-def image_13_2():
+def image_10_2():
     quad_cells, quad_nodes = get_cells_and_nodes(quadrangle_mesh)
     triangle_cells, triangle_nodes = get_cells_and_nodes(triangle_mesh)
     Voronoi_cells, Voronoi_nodes = get_Voronoi(triangle_mesh)
@@ -485,11 +491,11 @@ def image_13_2():
     ax.set_aspect(1)
     ax.set_axis_off()
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '13-2.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '10-2.png'), transparent=True)
     plt.close()
 
 
-def image_13_3():
+def image_10_3():
     uniform_split_mesh_cells, uniform_split_mesh_nodes = get_cells_and_nodes(os.path.join('meshes', 'msh', 'rectangle_1_uniform_split.msh'))
     small_quad_cells, small_quad_nodes = get_cells_and_nodes(os.path.join('meshes', 'msh', 'rectangle_1_small_quadrangle.msh'))
     quad_cells, quad_nodes = get_cells_and_nodes(quadrangle_mesh)
@@ -532,11 +538,11 @@ def image_13_3():
     ax.set_aspect(1)
     ax.set_axis_off()
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '13-3.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '10-3.png'), transparent=True)
     plt.close()
 
 
-def image_67(k, fname, ymin=None, ymax=None):
+def image_6(k, fname, legend=rus_legend, ymin=None, ymax=None):
     k = ufl.as_matrix(k)
     
     lagrange = basix.ufl.element("Lagrange", 'triangle', 1)
@@ -564,9 +570,10 @@ def image_67(k, fname, ymin=None, ymax=None):
 
     fig, ax = plt.subplots(figsize=figsize_plot, dpi=dpi)
     
-    for j, color, marker in zip(range(data.shape[1]), ((0, 0, 0, 1), (0, 0, 0, 0.5), (0, 0, 0, 1)), ('^', 'D', 'o')):
+    for j, color, marker in zip(range(data.shape[1]), ((0, 0, 0, 1), (0, 0, 0, 0.5), (0, 0, 0, 1)), ('^', marker_2, 'o')):
+        #ax.plot(data[:, j, 0], data[:, j, i], marker+'-k')
         if j == 1:
-            ax.plot(data[:, j, 0], data[:, j, i], marker + '-k', markersize=6*np.sqrt(3), markerfacecolor=color, markeredgewidth=0)
+            ax.plot(data[:, j, 0], data[:, j, i], marker + '-k', markersize=6*np.sqrt(2))
         else:
             ax.plot(data[:, j, 0], data[:, j, i], marker + '-k')
     
@@ -576,7 +583,7 @@ def image_67(k, fname, ymin=None, ymax=None):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.legend(['а', 'б', 'в'], scatteryoffsets=[1, 0.5, 0])
+    ax.legend(legend, scatteryoffsets=[1, 0.5, 0])
 
     if ymax is not None:
         ax.set_ylim(top=ymax)
@@ -587,10 +594,11 @@ def image_67(k, fname, ymin=None, ymax=None):
 
     fig.tight_layout(pad=0.2)
     fig.savefig(fname, transparent=True)
+
     plt.close()
 
 
-def image_89(k, fname):
+def image_7(k, fname, legend=rus_legend):
     k = ufl.as_matrix(k)
 
     data = []
@@ -614,7 +622,7 @@ def image_89(k, fname):
     i = 3
     fig, ax = plt.subplots(figsize=figsize_plot, dpi=dpi)
 
-    for j, marker in zip(range(data.shape[1]), ('^', 'D', 'o')):
+    for j, marker in zip(range(data.shape[1]), ('^', marker_2, 'o')):
         ax.plot(data[:, j, 0], data[:, j, i], marker+'-k')
     
     ax.set_xlabel("$M$")
@@ -623,14 +631,14 @@ def image_89(k, fname):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.legend(['а', 'б', 'в'])
+    ax.legend(legend)
 
     fig.tight_layout(pad=0.2)
     fig.savefig(fname, transparent=True)
     plt.close()
 
 
-def image_11_12(k, fname):
+def image_9(k, fname, legend=rus_legend):
     k = ufl.as_matrix(k)
 
     data = []
@@ -654,7 +662,7 @@ def image_11_12(k, fname):
     i = 3
     fig, ax = plt.subplots(figsize=figsize_plot, dpi=dpi)
 
-    for j, marker in zip(range(data.shape[1]), ('^', 'D', 'o')):
+    for j, marker in zip(range(data.shape[1]), ('^', marker_2, 'o')):
         ax.plot(data[:, j, 0], data[:, j, i], marker+'-k')
     
     ax.set_xlabel("$M$")
@@ -663,14 +671,14 @@ def image_11_12(k, fname):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.legend(['а', 'б', 'в'])
+    ax.legend(legend)
 
     fig.tight_layout(pad=0.2)
     fig.savefig(fname, transparent=True)
     plt.close()
 
 
-def image_14_15(k, fname):
+def image_11(k, fname, legend=rus_legend):
     k = ufl.as_matrix(k)
 
     data = []
@@ -694,7 +702,7 @@ def image_14_15(k, fname):
     i = 3
     fig, ax = plt.subplots(figsize=figsize_plot, dpi=dpi)
 
-    for j, marker in zip(range(data.shape[1]), ('^', 'D', 'o')):
+    for j, marker in zip(range(data.shape[1]), ('^', marker_2, 'o')):
         ax.plot(data[:, j, 0], data[:, j, i], marker+'-k')
     
     ax.set_xlabel("$M$")
@@ -703,7 +711,7 @@ def image_14_15(k, fname):
 
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.legend(['а', 'б', 'в'])
+    ax.legend(legend)
 
     fig.tight_layout(pad=0.2)
     fig.savefig(fname, transparent=True)
@@ -711,21 +719,21 @@ def image_14_15(k, fname):
 
 
 if __name__ == '__main__':
-    # image_1()
-    # image_2()
-    # image_3()
-    # image_4_1()
-    # image_4_2()
-    # image_4_3()
-    # image_5_1()
-    # image_5_2()
-    # image_5_3()
-    # image_10_1()
-    # image_10_2()
-    # image_10_3()
-    # image_13_1()
-    # image_13_2()
-    # image_13_3()
+    image_1()
+    image_2()
+    image_3()
+    image_4_1()
+    image_4_2()
+    image_4_3()
+    image_5_1()
+    image_5_2()
+    image_5_3()
+    image_8_1()
+    image_8_2()
+    image_8_3()
+    image_10_1()
+    image_10_2()
+    image_10_3()
 
     ks = [[[1, 0],
            [0, 1]],
@@ -733,14 +741,27 @@ if __name__ == '__main__':
             [30, 1000]]]
     
     # ymax=1e-2
-    image_67(ks[0], os.path.join(article_dir, '6.png'))
-    image_67(ks[1], os.path.join(article_dir, '7.png'))#, ymin=1e-4)
+    image_6(ks[0], os.path.join(article_dir, '6-1.png'))
+    image_6(ks[1], os.path.join(article_dir, '6-2.png'))#, ymin=1e-4)
 
-    image_89(ks[0], os.path.join(article_dir, '8.png'))
-    image_89(ks[1], os.path.join(article_dir, '9.png'))
+    image_7(ks[0], os.path.join(article_dir, '7-1.png'))
+    image_7(ks[1], os.path.join(article_dir, '7-2.png'))
 
-    image_11_12(ks[0], os.path.join(article_dir, '11.png'))
-    image_11_12(ks[1], os.path.join(article_dir, '12.png'))
+    image_9(ks[0], os.path.join(article_dir, '9-1.png'))
+    image_9(ks[1], os.path.join(article_dir, '9-2.png'))
 
-    image_14_15(ks[0], os.path.join(article_dir, '14.png'))
-    image_14_15(ks[1], os.path.join(article_dir, '15.png'))
+    image_11(ks[0], os.path.join(article_dir, '11-1.png'))
+    image_11(ks[1], os.path.join(article_dir, '11-2.png'))
+
+
+    image_6(ks[0], os.path.join(article_dir, '6-1_english.png'), legend=eng_legend)
+    image_6(ks[1], os.path.join(article_dir, '6-2_english.png'), legend=eng_legend)
+
+    image_7(ks[0], os.path.join(article_dir, '7-1_english.png'), legend=eng_legend)
+    image_7(ks[1], os.path.join(article_dir, '7-2_english.png'), legend=eng_legend)
+
+    image_9(ks[0], os.path.join(article_dir, '9-1_english.png'), legend=eng_legend)
+    image_9(ks[1], os.path.join(article_dir, '9-2_english.png'), legend=eng_legend)
+
+    image_11(ks[0], os.path.join(article_dir, '11-1_english.png'), legend=eng_legend)
+    image_11(ks[1], os.path.join(article_dir, '11-2_english.png'), legend=eng_legend)
