@@ -46,6 +46,7 @@ import meshio
 import os
 # 'rectangle_1_triangle.msh' 'rectangle_1_circumcenter.msh' 'rectangle_1_circumcenter_6.msh' ''
 mesh = meshio.read(os.path.join('meshes', 'msh', 'rectangle_1_split_quadrangles.msh'))
+#mesh = meshio.read(os.path.join('test.msh'))
 nodes = mesh.points[:, :2]
 cells = np.array([[nodes[node] for node in cell] for cell in mesh.cells[0].data])
 triang = Triangulation(nodes[:, 0], nodes[:, 1], mesh.cells[0].data)
