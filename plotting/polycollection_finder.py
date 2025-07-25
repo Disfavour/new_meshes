@@ -5,7 +5,7 @@ import numpy as np
 import pickle
 
 # rectangle_1_quadrangle.msh rectangle_1_split_quadrangles.msh rectangle_1_triangle rectangle_1_small_quadrangle
-mesh = meshio.read('meshes/msh/rectangle_1_quadrangle.msh')
+mesh = meshio.read('meshes/msh/rectangle_1_triangle.msh')
 
 points = mesh.points[:, :2]
 #quads = mesh.cells_dict['triangle']

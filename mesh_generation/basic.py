@@ -110,8 +110,11 @@ if __name__ == '__main__':
 
     import math
     basic_triangle_mesh = 'meshes/test.msh'
+    # polygon_points = (
+    #     (0, 0), (0, 0.75), (1, 0.75), (1, 0),
+    # )
     polygon_points = (
-        (0, 0), (0, 0.75), (1, 0.75), (1, 0),
+        (1, 0), (1, 0.75), (0, 0.75), (0, 0)
     )
     polygon_mesh_size = 1#0.2
     mesh_sizes = []
