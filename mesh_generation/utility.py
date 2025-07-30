@@ -178,3 +178,11 @@ def get_intersection_point_of_lines(a1, a2, b1, b2):
     p_x = ((x1*y2 - y1*x2)*(x3 - x4) - (x1 - x2)*(x3*y4 - y3*x4)) / ((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
     p_y = ((x1*y2 - y1*x2)*(y3 - y4) - (y1 - y2)*(x3*y4 - y3*x4)) / ((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
     return p_x, p_y
+
+
+# Формула площади Гаусса (многоугольника)
+def polygon_area(points):
+    points = np.asarray(points)
+    x = points[:, 0]
+    y = points[:, 1]
+    return 0.5 * np.abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1)))
