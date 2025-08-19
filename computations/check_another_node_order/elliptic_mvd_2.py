@@ -147,7 +147,7 @@ def calculate(quadrangle_mesh_name, k, plot=False):
     # print(f_boundary.min(), f_boundary.max())
     # exit()
 
-    # A = np.concatenate((A_inner, A_boundary))
+    A = np.concatenate((A_inner, A_boundary))
     # f = np.concatenate((f_inner, f_boundary))
     # u_1 = np.linalg.solve(A, f)
 
@@ -156,6 +156,7 @@ def calculate(quadrangle_mesh_name, k, plot=False):
     A_inner = A_inner[:, :node_groups[1]]
     assert np.allclose(A_inner, A_inner.T)
 
+    f_inner1 = f_inner.copy()
     f_inner = f_inner - A__inner_bc @ f_boundary
 
     u = np.linalg.solve(A_inner, f_inner)
@@ -169,19 +170,41 @@ def calculate(quadrangle_mesh_name, k, plot=False):
 
     if plot:
         utility_mvd.plot_results(u, u_e, node_coords, node_groups)
+    
+    u = np.concatenate((u[:node_groups[0]], u[node_groups[1]:node_groups[2]], u[node_groups[0]:node_groups[1]], u[node_groups[2]:node_groups[3]]))
+
+    f = np.concatenate((f_inner1, f_boundary))
+    f = np.concatenate((f[:node_groups[0]], f[node_groups[1]:node_groups[2]], f[node_groups[0]:node_groups[1]], f[node_groups[2]:node_groups[3]]))
+
+    A_DD = A[:node_groups[0], :node_groups[0]]
+    A_DV = A[:node_groups[0], node_groups[0]:node_groups[1]]
+    A_DpD = A[:node_groups[0], node_groups[1]:node_groups[2]]
+    A_DpV = A[:node_groups[0], node_groups[2]:node_groups[3]]
+
+    A_D = np.concatenate((A_DD, A_DpD, A_DV, A_DpV), axis=1)
+
+    A_VD = A[node_groups[0]:node_groups[1], :node_groups[0]]
+    A_VV = A[node_groups[0]:node_groups[1], node_groups[0]:node_groups[1]]
+    A_VpD = A[node_groups[0]:node_groups[1], node_groups[1]:node_groups[2]]
+    A_VpV = A[node_groups[0]:node_groups[1], node_groups[2]:node_groups[3]]
+
+    A_V = np.concatenate((A_VD, A_VpD, A_VV, A_VpV), axis=1)
+
+    A = np.concatenate((A_D, np.eye(node_groups[2] - node_groups[1], node_groups[3], node_groups[0]), A_V, np.eye(node_groups[3] - node_groups[2], node_groups[3], node_groups[2])))
+
+    u1 = np.linalg.solve(A, f)
 
     #np.savetxt('test_A_inner.txt', A_inner, fmt='%+0.2f')
-    #print(u)
-    
-    return node_coords.shape[0], L_max_D, L_max_V, L_max, L_2_D, L_2_V, L_2, vector_errornorm
+    return np.array((L_max_D, L_max_V, L_max, L_2_D, L_2_V, L_2)), u, f, A, u1
+    #return node_coords.shape[0], L_max_D, L_max_V, L_max, L_2_D, L_2_V, L_2, vector_errornorm
 
 
 if __name__ == '__main__':
     k = np.array(
         ((1, 0.5),
-         (0.2, 1))
+         (0, 1))
     )
-    res = calculate('meshes/rectangle/rectangle_10_quadrangle', k, plot=False)
+    res = calculate('meshes/rectangle/rectangle_0_quadrangle', k, plot=False)
     print(res)
 
     # матрица симметрична при любой к, ответ меняется на 1е-12 при лифтинге

@@ -67,5 +67,5 @@ def solve(mesh_name, k):
 if __name__ == '__main__':
     k = ufl.as_matrix([[1, 0],
                        [0, 1]])
-    res = solve('meshes/rectangle/rectangle_0_triangle.msh', k)
+    res = solve('meshes/rectangle/rectangle_13_triangle.msh', k)
     print(res)

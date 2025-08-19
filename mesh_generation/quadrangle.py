@@ -168,12 +168,17 @@ def generate(triangle_mesh, fname=None, ui=False):
     for k, vs in D_to_V.items():
         D_to_V[k] = utility.sort_counter_clockwise(vs, [node_coords[node - one] for node in vs])
 
-    all_nodes = np.concatenate((D_inner_nodes, D_boundary_nodes, V_inner_nodes, V_boundary_nodes))
-    node_groups = np.array((
-        D_inner_nodes.size,
-        D_inner_nodes.size + D_boundary_nodes.size,
-        D_inner_nodes.size + D_boundary_nodes.size + len(V_inner_nodes),
-        all_nodes.size), dtype=np.uint64)
+    #different_nodes = (D_inner_nodes, D_boundary_nodes, V_inner_nodes, V_boundary_nodes)    # old
+    different_nodes = (D_inner_nodes, V_inner_nodes, D_boundary_nodes, V_boundary_nodes)
+    all_nodes = np.concatenate(different_nodes)
+    lenghts = [len(arr) for arr in different_nodes]
+    node_groups = np.array([sum(lenghts[:i]) for i in range(1, len(lenghts) + 1)], dtype=np.uint64)
+    
+    # (
+    #     D_inner_nodes.size,
+    #     D_inner_nodes.size + len(V_inner_nodes),
+    #     D_inner_nodes.size + len(V_inner_nodes) + D_boundary_nodes.size,
+    #     all_nodes.size)
 
     new_tags = range(1, all_nodes.size + 1)
     gmsh.model.mesh.renumber_nodes(all_nodes, new_tags)

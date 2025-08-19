@@ -62,32 +62,25 @@ def experiment_rectangle(basic_dir, n=10):
     for i in range(n):
         while True:
             max_angle, number_of_elements = generate_mesh_on_rectangle(mesh_size, os.path.join(basic_dir, f'rectangle_{i}_triangle.msh'))
-            if max_angle < 85 and number_of_elements > prevoius_number_of_elements:
-                print(max_angle)
+            if max_angle < 88 and number_of_elements > prevoius_number_of_elements:
+                print(max_angle, number_of_elements, mesh_size)
                 quadrangle.generate(os.path.join(basic_dir, f'rectangle_{i}_triangle.msh'), os.path.join(basic_dir, f'rectangle_{i}_quadrangle'))
-
-                msh = meshio.read(os.path.join(basic_dir, f'rectangle_{i}_triangle.msh'))
-                points = msh.points[:, :2]
-                cells = {'triangle': msh.cells_dict['triangle']}
-                meshio.write_points_cells(os.path.join(basic_dir, f'rectangle_{i}_triangle.xdmf'), points, cells)
-
-                msh = meshio.read(os.path.join(basic_dir, f'rectangle_{i}_quadrangle.msh'))
-                points = msh.points[:, :2]
-                cells = {'quad': msh.cells_dict['quad']}
-                meshio.write_points_cells(os.path.join(basic_dir, f'rectangle_{i}_quadrangle.xdmf'), points, cells)
+                print('done')
 
                 prevoius_number_of_elements = number_of_elements
                 break
 
             mesh_size *= 0.99
         
-        mesh_size /= 1.5 ** 0.5
+        mesh_size /= 1.5 ** 0.5#1.5 ** 0.5
 
 
 if __name__ == '__main__':
     basic_dir = os.path.join('meshes', 'rectangle')
     os.makedirs(basic_dir, exist_ok=True)
+
+    # 81.19786204503613 20 0.49483865960020695
     
-    experiment_rectangle(basic_dir)
+    experiment_rectangle(basic_dir, n=22)
     
     #generate_mesh_on_rectangle(0.2, ui=True)

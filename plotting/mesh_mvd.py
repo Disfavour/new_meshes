@@ -1,14 +1,13 @@
-import gmsh
+import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
-from matplotlib import pyplot as plt
-from matplotlib.collections import PolyCollection
 import utility
+import gmsh
 
 
 def plot(quadrangle_mesh, fname):
     gmsh.initialize()
     gmsh.open(f'{quadrangle_mesh}.msh')
-
     xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.get_bounding_box(-1, -1)
 
     quadrangle_tags, quadrangle_nodes = gmsh.model.mesh.get_elements_by_type(gmsh.model.mesh.get_element_type("Quadrangle", 1))
@@ -35,43 +34,15 @@ def plot(quadrangle_mesh, fname):
     nodes_V = np.concatenate((np.arange(node_groups[0], node_groups[1]), np.arange(node_groups[2], node_groups[3])))
     nodes_V_coords = node_coords[nodes_V]
 
-    pc = PolyCollection(node_coords[quadrangle_nodes], facecolors='none', edgecolors='m')
+    pc = matplotlib.collections.PolyCollection(node_coords[quadrangle_nodes], facecolors='none', edgecolors='m')
 
     fig, ax = plt.subplots(figsize=utility.get_figsize(xmax - xmin, ymax - ymin))
-    
+
     ax.add_collection(pc)
-
-    
-
-    centers = []
-    basis = []
-    for nodes in quadrangle_nodes:
-        centers.append(utility.get_intersection_point_of_lines(*(node_coords[node] for node in np.concatenate((nodes[::2], nodes[1::2])))))
-
-        e1 = (node_coords[nodes[2]] - node_coords[nodes[0]])
-        e1 /= np.linalg.norm(e1)
-
-        e2 = (node_coords[nodes[3]] - node_coords[nodes[1]])
-        e2 /= np.linalg.norm(e2)
-
-        basis.extend((e1, e2))
-    
-    centers = np.array(centers)
-    e1 = np.array(basis[::2])
-    e2 = np.array(basis[1::2])
-
-    #ax.plot(D_boundary_nodes_coords[:, 0], D_boundary_nodes_coords[:, 1], 'bo', mfc='w') # mew markeredgewidth
-    ax.plot(centers[:, 0], centers[:, 1], 'om')
-    ax.plot(nodes_V_coords[:, 0], nodes_V_coords[:, 1], 'or')
     ax.plot(nodes_D_coords[:, 0], nodes_D_coords[:, 1], 'ob')
-    
-    
-    ax.quiver(centers[:, 0], centers[:, 1], e1[:, 0], e1[:, 1], color='b', pivot='tail')
-    ax.quiver(centers[:, 0], centers[:, 1], e2[:, 0], e2[:, 1], color='r', pivot='tail')
+    ax.plot(nodes_V_coords[:, 0], nodes_V_coords[:, 1], 'or')
 
-    xmin, xmax, ymin, ymax = ax.axis('scaled')
-    k = 0.03
-    ax.axis([xmin - k, xmax + k, ymin - k, ymax + k])
+    ax.axis('scaled')
     ax.set_axis_off()
 
     fig.tight_layout(pad=0)
@@ -80,4 +51,4 @@ def plot(quadrangle_mesh, fname):
 
 
 if __name__ == '__main__':
-    plot(f'meshes/rectangle/rectangle_0_quadrangle', 'images/mvd/local_basises.pdf')
+    plot(f'meshes/rectangle/rectangle_0_quadrangle', 'images/mvd/mesh_mvd.pdf')

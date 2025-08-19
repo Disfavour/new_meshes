@@ -190,8 +190,8 @@ def calculate(quadrangle_mesh_name, k, plot=False):
         range(node_groups[1], node_groups[2]), cell_nodes[node_groups[1]:node_groups[2]], quad_nodes, vector_values, node_coords, cell_areas[node_groups[1]:node_groups[2]], c, f, Voronoi=True)
     A_V_boundary, f_V_boundary = assemble_matrix_and_vector_for_boundary_nodes(range(node_groups[2], node_groups[3]), node_coords, u_exact)
 
-    print(np.allclose(A_D_inner[:,:node_groups[0]], A_D_inner[:,:node_groups[0]].T))
-    print(np.allclose(A_V_inner[:,node_groups[1]:node_groups[2]], A_V_inner[:,node_groups[1]:node_groups[2]].T))
+    #print(np.allclose(A_D_inner[:,:node_groups[0]], A_D_inner[:,:node_groups[0]].T))
+    #print(np.allclose(A_V_inner[:,node_groups[1]:node_groups[2]], A_V_inner[:,node_groups[1]:node_groups[2]].T))
 
     A_D = np.concatenate((A_D_inner, A_D_boundary))
     f_D = np.concatenate((f_D_inner, f_D_boundary))
@@ -209,10 +209,11 @@ def calculate(quadrangle_mesh_name, k, plot=False):
     if plot:
         utility_mvd.plot_results(u, u_e, node_coords, node_groups)
 
-    print(L_max_D, L_max_V, L_max, L_2_D, L_2_V, L_2)
+    #print(L_max_D, L_max_V, L_max, L_2_D, L_2_V, L_2)
     #np.savetxt('test.txt', A, fmt='%+0.3f')
-    
-    return u[:node_groups[1]], node_coords[:node_groups[1]], A_D[:, :node_groups[1]], f_D, node_groups
+
+    return np.array((L_max_D, L_max_V, L_max, L_2_D, L_2_V, L_2)), u, f, A
+    #return u[:node_groups[1]], node_coords[:node_groups[1]], A_D[:, :node_groups[1]], f_D, node_groups
 
 
 if __name__ == '__main__':
@@ -220,5 +221,5 @@ if __name__ == '__main__':
         ((1, 1),
          (0, 2))
     )
-    res = calculate('meshes/rectangle/old_rectangle_9_quadrangle', k, plot=False)
+    res = calculate('meshes/rectangle/old_rectangle_0_quadrangle', k, plot=False)
     #print(res)

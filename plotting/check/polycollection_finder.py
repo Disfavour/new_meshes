@@ -3,18 +3,30 @@ from matplotlib.collections import PolyCollection
 import meshio
 import numpy as np
 import pickle
+import gmsh
 
 # rectangle_1_quadrangle.msh rectangle_1_split_quadrangles.msh rectangle_1_triangle rectangle_1_small_quadrangle
-mesh = meshio.read('meshes/msh/rectangle_1_triangle.msh')
+mesh_name = f'meshes/rectangle/rectangle_0_quadrangle.msh'
+mesh = meshio.read(mesh_name)
 
 points = mesh.points[:, :2]
-#quads = mesh.cells_dict['triangle']
-quads = mesh.cells[0].data
+quads = mesh.cells_dict['quad'] # triangle
+#quads = mesh.cells[0].data
 
 quads_points = [
     np.array([points[j] for j in i])
     for i in quads
 ]
+
+gmsh.initialize()
+gmsh.open(mesh_name)
+node_tags, node_coords, _ = gmsh.model.mesh.get_nodes(returnParametricCoord=False)
+node_coords = node_coords.reshape(-1, 3)[:, :2]
+gmsh.finalize()
+
+
+
+
 # print(quads_points)
 
 # print(mesh.points)
@@ -30,6 +42,9 @@ quads_points = [
 plt.figure()
 ax = plt.gca()
 
+for node_tag, node_coord in zip(node_tags - 1, node_coords):
+    plt.text(*node_coord, node_tag, size=8)
+
 pc = PolyCollection(quads_points, facecolors='white', edgecolors='black')
 pc.set_alpha(0.2)
 #pc.set_array(np.ones(quads.shape[0]))   # scalar -> cell
@@ -40,8 +55,7 @@ ax.set_aspect('equal', 'box')
 
 plt.scatter(points[:, 0], points[:, 1])
 
-for i, (xi,yi) in enumerate(points):
-    plt.text(xi,yi,i, size=8)
+
 
 # def on_mouse_move(event):
 #     print(event)

@@ -18,7 +18,7 @@ def solve(mesh_name, k):
     
 
     x = ufl.SpatialCoordinate(domain)
-    u_ufl =  x[0]**2 + x[0]*x[1] #ufl.exp(x[0]*x[1])
+    u_ufl =  ufl.exp(x[0]*x[1]) # x[0]**2 + x[0]*x[1]
     c_ufl = 0
 
     V = dolfinx.fem.functionspace(domain, ('Lagrange', 1))
@@ -47,7 +47,6 @@ def solve(mesh_name, k):
     L = dolfinx.fem.form(L)
 
     A = dolfinx.fem.petsc.assemble_matrix(a, bcs=[bc])
-    #print(A.getValuesCSR())
     A.assemble()
     A1 = A.copy()
     #b = dolfinx.fem.petsc.create_vector(dolfinx.fem.form(L))
@@ -55,24 +54,16 @@ def solve(mesh_name, k):
 
     rows, cols, values = A1.getValuesCSR()
     A_scipy = scipy.sparse.csr_matrix((values, cols, rows))
-    #print(b.array)
-
-    #print(A_scipy.toarray())
-    #print(A_scipy.toarray().shape)
 
     dof_coords = V.tabulate_dof_coordinates()
-    #print(dof_coords)
 
-    #print(b.array)
     b1 = b.array.copy()
 
     # Apply Dirichlet boundary condition to the vector
     dolfinx.fem.petsc.apply_lifting(b, [a], [[bc]])
     b2 = b.array.copy()
     #b.ghostUpdate(addv=PETSc.InsertMode.ADD_VALUES, mode=PETSc.ScatterMode.REVERSE)
-    #print(b.array)
     dolfinx.fem.petsc.set_bc(b, [bc])
-    #print(b.array)
     b3 = b.array.copy()
 
     solver = PETSc.KSP().create(domain.comm)
@@ -83,8 +74,6 @@ def solve(mesh_name, k):
     u = dolfinx.fem.Function(V)
     # Solve linear problem
     solver.solve(b, u.x.petsc_vec)
-
-    #exit()
 
     
     #problem = dolfinx.fem.petsc.LinearProblem(a, L, bcs=[bc], petsc_options={"ksp_type": "preonly", "pc_type": "lu"})
@@ -108,7 +97,7 @@ def solve(mesh_name, k):
     dofs_num = V.dofmap.index_map.size_global
     node_num = domain.geometry.x.shape[0]
     cell_num = domain.topology.index_map(domain.topology.dim).size_local
-    print(error_L2)
+    #print(error_L2)
 
     return u.x.array, dof_coords[:, :2], A_scipy.toarray(), b1, b2, b3
 
@@ -116,5 +105,5 @@ def solve(mesh_name, k):
 if __name__ == '__main__':
     k = ufl.as_matrix([[1, 0],
                        [0, 1]])
-    res = solve('meshes/rectangle/rectangle_0_triangle.msh', k)
-    #print(res)
+    res = solve('meshes/rectangle/old_rectangle_0_triangle.msh', k)
+    print(res)
