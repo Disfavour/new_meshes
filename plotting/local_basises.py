@@ -35,7 +35,7 @@ def plot(quadrangle_mesh, fname):
     nodes_V = np.concatenate((np.arange(node_groups[0], node_groups[1]), np.arange(node_groups[2], node_groups[3])))
     nodes_V_coords = node_coords[nodes_V]
 
-    pc = PolyCollection(node_coords[quadrangle_nodes], facecolors='none', edgecolors='m')
+    pc = PolyCollection(node_coords[quadrangle_nodes], facecolors='none', edgecolors='g')
 
     fig, ax = plt.subplots(figsize=utility.get_figsize(xmax - xmin, ymax - ymin))
     
@@ -61,7 +61,7 @@ def plot(quadrangle_mesh, fname):
     e2 = np.array(basis[1::2])
 
     #ax.plot(D_boundary_nodes_coords[:, 0], D_boundary_nodes_coords[:, 1], 'bo', mfc='w') # mew markeredgewidth
-    ax.plot(centers[:, 0], centers[:, 1], 'om')
+    ax.plot(centers[:, 0], centers[:, 1], 'og')
     ax.plot(nodes_V_coords[:, 0], nodes_V_coords[:, 1], 'or')
     ax.plot(nodes_D_coords[:, 0], nodes_D_coords[:, 1], 'ob')
     

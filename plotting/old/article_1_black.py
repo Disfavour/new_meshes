@@ -112,7 +112,7 @@ def image_1():
     ax.set_axis_off()
 
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '1.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '1.pdf'), transparent=True)
     plt.close()
 
 
@@ -128,13 +128,13 @@ def image_2():
     ax.add_collection(boundary_pc)
 
     ax.plot(nodes[:, 0], nodes[:, 1], 'ko')
-    ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'k^')
+    ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'kX')
     
     ax.axis('scaled')
     ax.set_axis_off()
 
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '2.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '2.pdf'), transparent=True)
     plt.close()
 
 
@@ -151,17 +151,17 @@ def image_3():
     ax.add_collection(boundary_pc)
 
     ax.plot(triangle_nodes[:, 0], triangle_nodes[:, 1], 'ko')
-    ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'k^')
+    ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'kX')
 
     ax.axis('scaled')
     ax.set_axis_off()
 
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '3.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '3.pdf'), transparent=True)
     plt.close()
 
 
-def image_4_1(fname=os.path.join(article_dir, '4-1.png')):
+def image_4_1(fname=os.path.join(article_dir, '4-1.pdf')):
     triangle_cells, triangle_nodes = get_cells_and_nodes(triangle_mesh)
     Voronoi_cells, Voronoi_nodes = get_Voronoi(triangle_mesh)
 
@@ -172,7 +172,7 @@ def image_4_1(fname=os.path.join(article_dir, '4-1.png')):
     ax.add_collection(pc)
 
     Delaunay_lines = ax.plot(triangle_nodes[:, 0], triangle_nodes[:, 1], 'ko')
-    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'k^')
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'kX')
 
     circumcenter = Voronoi_nodes[triangle_tag]
     radius = np.linalg.norm(circumcenter - triangle_cells[triangle_tag][0]) * radius_multiplier
@@ -212,7 +212,7 @@ def image_4_2():
     ax.add_collection(pc)
 
     Delaunay_lines = ax.plot(triangle_nodes[:, 0], triangle_nodes[:, 1], 'ko')
-    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'k^')
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'kX')
 
     circumcenter = Voronoi_nodes[triangle_tag]
     radius = np.linalg.norm(circumcenter - triangle_cells[triangle_tag][0]) * radius_multiplier
@@ -230,7 +230,7 @@ def image_4_2():
     ax.set_aspect(1)
     ax.set_axis_off()
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '4-2.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '4-2.pdf'), transparent=True)
     plt.close()
 
 
@@ -265,7 +265,7 @@ def image_4_3():
     ax.set_aspect(1)
     ax.set_axis_off()
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '4-3.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '4-3.pdf'), transparent=True)
     plt.close()
 
 
@@ -282,7 +282,7 @@ def image_5_1():
     ax.add_collection(pc)
 
     triangle6_lines = ax.plot(uniform_split_mesh_nodes[:, 0], uniform_split_mesh_nodes[:, 1], 'ko')
-    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'k^')
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'kX')
 
     circumcenter = Voronoi_nodes[triangle_tag]
     radius = np.linalg.norm(circumcenter - triangle_cells[triangle_tag][0]) * radius_multiplier
@@ -300,7 +300,7 @@ def image_5_1():
     ax.set_aspect(1)
     ax.set_axis_off()
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '5-1.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '5-1.pdf'), transparent=True)
     plt.close()
 
 
@@ -320,7 +320,7 @@ def image_5_2():
     ax.add_collection(pc)
 
     Delaunay_lines = ax.plot(uniform_split_mesh_nodes[:, 0], uniform_split_mesh_nodes[:, 1], 'ko')
-    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'k^')
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'kX')
 
     circumcenter = Voronoi_nodes[triangle_tag]
     radius = np.linalg.norm(circumcenter - triangle_cells[triangle_tag][0]) * radius_multiplier
@@ -338,7 +338,7 @@ def image_5_2():
     ax.set_aspect(1)
     ax.set_axis_off()
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '5-2.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '5-2.pdf'), transparent=True)
     plt.close()
 
 
@@ -374,15 +374,15 @@ def image_5_3():
     ax.set_aspect(1)
     ax.set_axis_off()
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '5-3.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '5-3.pdf'), transparent=True)
     plt.close()
 
 
 def image_8_1():
-    image_4_1(fname=os.path.join(article_dir, '8-1.png'))
+    image_4_1(fname=os.path.join(article_dir, '8-1.pdf'))
 
 
-def image_8_2(fname=os.path.join(article_dir, '8-2.png')):
+def image_8_2(fname=os.path.join(article_dir, '8-2.pdf')):
     quad_cells, quad_nodes = get_cells_and_nodes(quadrangle_mesh)
     triangle_cells, triangle_nodes = get_cells_and_nodes(triangle_mesh)
     Voronoi_cells, Voronoi_nodes = get_Voronoi(triangle_mesh)
@@ -395,7 +395,7 @@ def image_8_2(fname=os.path.join(article_dir, '8-2.png')):
     ax.add_collection(pc)
 
     Delaunay_lines = ax.plot(triangle_nodes[:, 0], triangle_nodes[:, 1], 'ko')
-    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'k^')
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'kX')
 
     circumcenter = Voronoi_nodes[triangle_tag]
     radius = np.linalg.norm(circumcenter - triangle_cells[triangle_tag][0]) * radius_multiplier
@@ -431,7 +431,7 @@ def image_8_3():
     ax.add_collection(pc)
 
     Delaunay_lines = ax.plot(triangle_nodes[:, 0], triangle_nodes[:, 1], 'ko')
-    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'k^')
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'kX')
 
     circumcenter = Voronoi_nodes[triangle_tag]
     radius = np.linalg.norm(circumcenter - triangle_cells[triangle_tag][0]) * radius_multiplier
@@ -449,12 +449,12 @@ def image_8_3():
     ax.set_aspect(1)
     ax.set_axis_off()
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '8-3.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '8-3.pdf'), transparent=True)
     plt.close()
 
 
 def image_10_1():
-    image_8_2(fname=os.path.join(article_dir, '10-1.png'))
+    image_8_2(fname=os.path.join(article_dir, '10-1.pdf'))
 
 
 def image_10_2():
@@ -472,7 +472,7 @@ def image_10_2():
 
     centroid_lines = ax.plot(centroids[:, 0], centroids[:, 1], 'ko')
     Delaunay_lines = ax.plot(triangle_nodes[:, 0], triangle_nodes[:, 1], 'ko')
-    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'k^')
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'kX')
 
     circumcenter = Voronoi_nodes[triangle_tag]
     radius = np.linalg.norm(circumcenter - triangle_cells[triangle_tag][0]) * radius_multiplier
@@ -491,7 +491,7 @@ def image_10_2():
     ax.set_aspect(1)
     ax.set_axis_off()
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '10-2.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '10-2.pdf'), transparent=True)
     plt.close()
 
 
@@ -519,7 +519,7 @@ def image_10_3():
     ax.add_collection(pc2)
 
     Delaunay_lines = ax.plot(uniform_split_mesh_nodes[:, 0], uniform_split_mesh_nodes[:, 1], 'ko')
-    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'k^')
+    Voronoi_lines = ax.plot(Voronoi_nodes[:, 0], Voronoi_nodes[:, 1], 'kX')
 
     circumcenter = Voronoi_nodes[triangle_tag]
     radius = np.linalg.norm(circumcenter - triangle_cells[triangle_tag][0]) * radius_multiplier
@@ -538,7 +538,7 @@ def image_10_3():
     ax.set_aspect(1)
     ax.set_axis_off()
     fig.tight_layout(pad=0)
-    fig.savefig(os.path.join(article_dir, '10-3.png'), transparent=True)
+    fig.savefig(os.path.join(article_dir, '10-3.pdf'), transparent=True)
     plt.close()
 
 
@@ -570,7 +570,7 @@ def image_6(k, fname, legend=rus_legend, ymin=None, ymax=None):
 
     fig, ax = plt.subplots(figsize=figsize_plot, dpi=dpi)
     
-    for j, color, marker in zip(range(data.shape[1]), ((0, 0, 0, 1), (0, 0, 0, 0.5), (0, 0, 0, 1)), ('^', marker_2, 'o')):
+    for j, color, marker in zip(range(data.shape[1]), ((0, 0, 0, 1), (0, 0, 0, 0.5), (0, 0, 0, 1)), ('X', marker_2, 'o')):
         #ax.plot(data[:, j, 0], data[:, j, i], marker+'-k')
         if j == 1:
             ax.plot(data[:, j, 0], data[:, j, i], marker + '-k', markersize=6*np.sqrt(2))
@@ -622,7 +622,7 @@ def image_7(k, fname, legend=rus_legend):
     i = 3
     fig, ax = plt.subplots(figsize=figsize_plot, dpi=dpi)
 
-    for j, marker in zip(range(data.shape[1]), ('^', marker_2, 'o')):
+    for j, marker in zip(range(data.shape[1]), ('X', marker_2, 'o')):
         ax.plot(data[:, j, 0], data[:, j, i], marker+'-k')
     
     ax.set_xlabel("$M$")
@@ -662,7 +662,7 @@ def image_9(k, fname, legend=rus_legend):
     i = 3
     fig, ax = plt.subplots(figsize=figsize_plot, dpi=dpi)
 
-    for j, marker in zip(range(data.shape[1]), ('^', marker_2, 'o')):
+    for j, marker in zip(range(data.shape[1]), ('X', marker_2, 'o')):
         ax.plot(data[:, j, 0], data[:, j, i], marker+'-k')
     
     ax.set_xlabel("$M$")
@@ -702,7 +702,7 @@ def image_11(k, fname, legend=rus_legend):
     i = 3
     fig, ax = plt.subplots(figsize=figsize_plot, dpi=dpi)
 
-    for j, marker in zip(range(data.shape[1]), ('^', marker_2, 'o')):
+    for j, marker in zip(range(data.shape[1]), ('X', marker_2, 'o')):
         ax.plot(data[:, j, 0], data[:, j, i], marker+'-k')
     
     ax.set_xlabel("$M$")
@@ -741,27 +741,27 @@ if __name__ == '__main__':
             [30, 1000]]]
     
     # ymax=1e-2
-    image_6(ks[0], os.path.join(article_dir, '6-1.png'))
-    image_6(ks[1], os.path.join(article_dir, '6-2.png'))#, ymin=1e-4)
+    # image_6(ks[0], os.path.join(article_dir, '6-1.png'))
+    # image_6(ks[1], os.path.join(article_dir, '6-2.png'))#, ymin=1e-4)
 
-    image_7(ks[0], os.path.join(article_dir, '7-1.png'))
-    image_7(ks[1], os.path.join(article_dir, '7-2.png'))
+    # image_7(ks[0], os.path.join(article_dir, '7-1.png'))
+    # image_7(ks[1], os.path.join(article_dir, '7-2.png'))
 
-    image_9(ks[0], os.path.join(article_dir, '9-1.png'))
-    image_9(ks[1], os.path.join(article_dir, '9-2.png'))
+    # image_9(ks[0], os.path.join(article_dir, '9-1.png'))
+    # image_9(ks[1], os.path.join(article_dir, '9-2.png'))
 
-    image_11(ks[0], os.path.join(article_dir, '11-1.png'))
-    image_11(ks[1], os.path.join(article_dir, '11-2.png'))
+    # image_11(ks[0], os.path.join(article_dir, '11-1.png'))
+    # image_11(ks[1], os.path.join(article_dir, '11-2.png'))
 
 
-    image_6(ks[0], os.path.join(article_dir, '6-1_english.png'), legend=eng_legend)
-    image_6(ks[1], os.path.join(article_dir, '6-2_english.png'), legend=eng_legend)
+    # image_6(ks[0], os.path.join(article_dir, '6-1_english.png'), legend=eng_legend)
+    # image_6(ks[1], os.path.join(article_dir, '6-2_english.png'), legend=eng_legend)
 
-    image_7(ks[0], os.path.join(article_dir, '7-1_english.png'), legend=eng_legend)
-    image_7(ks[1], os.path.join(article_dir, '7-2_english.png'), legend=eng_legend)
+    # image_7(ks[0], os.path.join(article_dir, '7-1_english.png'), legend=eng_legend)
+    # image_7(ks[1], os.path.join(article_dir, '7-2_english.png'), legend=eng_legend)
 
-    image_9(ks[0], os.path.join(article_dir, '9-1_english.png'), legend=eng_legend)
-    image_9(ks[1], os.path.join(article_dir, '9-2_english.png'), legend=eng_legend)
+    # image_9(ks[0], os.path.join(article_dir, '9-1_english.png'), legend=eng_legend)
+    # image_9(ks[1], os.path.join(article_dir, '9-2_english.png'), legend=eng_legend)
 
-    image_11(ks[0], os.path.join(article_dir, '11-1_english.png'), legend=eng_legend)
-    image_11(ks[1], os.path.join(article_dir, '11-2_english.png'), legend=eng_legend)
+    # image_11(ks[0], os.path.join(article_dir, '11-1_english.png'), legend=eng_legend)
+    # image_11(ks[1], os.path.join(article_dir, '11-2_english.png'), legend=eng_legend)

@@ -5,7 +5,7 @@ import utility
 import gmsh
 
 
-def plot(triangle_mesh, fname):
+def plot(triangle_mesh, fname, c='b'):
     gmsh.initialize()
     gmsh.open(triangle_mesh)
 
@@ -23,7 +23,7 @@ def plot(triangle_mesh, fname):
 
     fig, ax = plt.subplots(figsize=utility.get_figsize(xmax - xmin, ymax - ymin))
 
-    ax.triplot(triangulation, 'o-b')
+    ax.triplot(triangulation, f'o-{c}')
 
     ax.axis('scaled')
     ax.set_axis_off()
@@ -35,3 +35,4 @@ def plot(triangle_mesh, fname):
 
 if __name__ == '__main__':
     plot(f'meshes/rectangle/rectangle_0_triangle.msh', 'images/mvd/mesh_triangle.pdf')
+    plot(f'meshes/rectangle/rectangle_0_triangle.msh', 'images/mvd/bw_mesh_triangle.pdf', c='k')

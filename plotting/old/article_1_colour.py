@@ -542,7 +542,7 @@ def image_10_3():
     plt.close()
 
 
-def image_6(k, fname, legend=rus_legend, ymin=None, ymax=None):
+def image_6(k, fname, legend=legend, ymin=None, ymax=None):
     k = ufl.as_matrix(k)
     
     lagrange = basix.ufl.element("Lagrange", 'triangle', 1)
@@ -597,7 +597,7 @@ def image_6(k, fname, legend=rus_legend, ymin=None, ymax=None):
     plt.close()
 
 
-def image_7(k, fname, legend=rus_legend):
+def image_7(k, fname, legend=legend):
     k = ufl.as_matrix(k)
 
     data = []
@@ -637,7 +637,7 @@ def image_7(k, fname, legend=rus_legend):
     plt.close()
 
 
-def image_9(k, fname, legend=rus_legend):
+def image_9(k, fname, legend=legend):
     k = ufl.as_matrix(k)
 
     data = []
@@ -677,7 +677,7 @@ def image_9(k, fname, legend=rus_legend):
     plt.close()
 
 
-def image_11(k, fname, legend=rus_legend):
+def image_11(k, fname, legend=legend):
     k = ufl.as_matrix(k)
 
     data = []
@@ -740,27 +740,28 @@ if __name__ == '__main__':
             [30, 1000]]]
     
     # ymax=1e-2
-    image_6(ks[0], os.path.join(article_dir, '6-1.pdf'))
-    image_6(ks[1], os.path.join(article_dir, '6-2.pdf'))#, ymin=1e-4)
+    image_6(ks[0], os.path.join(article_dir, '6-1.pdf'), legend)
+    image_6(ks[1], os.path.join(article_dir, '6-2.pdf'), legend)#, ymin=1e-4)
 
-    image_7(ks[0], os.path.join(article_dir, '7-1.pdf'))
-    image_7(ks[1], os.path.join(article_dir, '7-2.pdf'))
+    image_7(ks[0], os.path.join(article_dir, '7-1.pdf'), legend)
+    image_7(ks[1], os.path.join(article_dir, '7-2.pdf'), legend)
 
-    image_9(ks[0], os.path.join(article_dir, '9-1.pdf'))
-    image_9(ks[1], os.path.join(article_dir, '9-2.pdf'))
+    image_9(ks[0], os.path.join(article_dir, '9-1.pdf'), legend)
+    image_9(ks[1], os.path.join(article_dir, '9-2.pdf'), legend)
 
-    image_11(ks[0], os.path.join(article_dir, '11-1.pdf'))
-    image_11(ks[1], os.path.join(article_dir, '11-2.pdf'))
+    image_11(ks[0], os.path.join(article_dir, '11-1.pdf'), legend)
+    image_11(ks[1], os.path.join(article_dir, '11-2.pdf'), legend)
 
 
-    image_6(ks[0], os.path.join(article_dir, '6-1_english.pdf'), legend=eng_legend)
-    image_6(ks[1], os.path.join(article_dir, '6-2_english.pdf'), legend=eng_legend)
+    # legend=rus_legend
+    # image_6(ks[0], os.path.join(article_dir, '6-1_english.pdf'), legend)
+    # image_6(ks[1], os.path.join(article_dir, '6-2_english.pdf'), legend)
 
-    image_7(ks[0], os.path.join(article_dir, '7-1_english.pdf'), legend=eng_legend)
-    image_7(ks[1], os.path.join(article_dir, '7-2_english.pdf'), legend=eng_legend)
+    # image_7(ks[0], os.path.join(article_dir, '7-1_english.pdf'), legend)
+    # image_7(ks[1], os.path.join(article_dir, '7-2_english.pdf'), legend)
 
-    image_9(ks[0], os.path.join(article_dir, '9-1_english.pdf'), legend=eng_legend)
-    image_9(ks[1], os.path.join(article_dir, '9-2_english.pdf'), legend=eng_legend)
+    # image_9(ks[0], os.path.join(article_dir, '9-1_english.pdf'), legend)
+    # image_9(ks[1], os.path.join(article_dir, '9-2_english.pdf'), legend)
 
-    image_11(ks[0], os.path.join(article_dir, '11-1_english.pdf'), legend=eng_legend)
-    image_11(ks[1], os.path.join(article_dir, '11-2_english.pdf'), legend=eng_legend)
+    # image_11(ks[0], os.path.join(article_dir, '11-1_english.pdf'), legend)
+    # image_11(ks[1], os.path.join(article_dir, '11-2_english.pdf'), legend)

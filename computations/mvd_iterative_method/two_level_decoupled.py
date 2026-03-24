@@ -1,13 +1,12 @@
 import gmsh
 import numpy as np
 import sympy
-import sys
-#sys.path.append('mesh_generation')
-#import utility
-import utility_mvd
-from scipy.sparse import lil_array, coo_array
-from scipy.sparse.linalg import spsolve
+from scipy.sparse import coo_array, csr_array
+from scipy.sparse.linalg import spsolve, inv
 import time
+import sys
+sys.path.append('computations')
+import utility_mvd
 
 
 def load_data(quadrangle_mesh_name):
@@ -51,6 +50,7 @@ def calculate_vector_values(quadrangle_nodes, node_coords, k):
         (0, 1)
     ))
 
+    gammas = []
     for i, quad_nodes in enumerate(quadrangle_nodes):
         e_D = node_coords[quad_nodes[2]] - node_coords[quad_nodes[0]]
         e_D_lenght = np.linalg.norm(e_D)
@@ -65,6 +65,8 @@ def calculate_vector_values(quadrangle_nodes, node_coords, k):
 
         C = np.linalg.inv(B) @ B_new_basis
         k_new_basis = np.linalg.inv(C) @ k @ C
+
+        gammas.append(k_new_basis[0, 1] / np.sqrt(k_new_basis[0, 0] * k_new_basis[1, 1]))
 
         col.extend((
             quad_nodes[2],
@@ -87,8 +89,7 @@ def calculate_vector_values(quadrangle_nodes, node_coords, k):
             -k_new_basis[1, 1] / e_V_lenght,
         ))
 
-
-    return np.array(col), np.array(data)
+    return np.array(col), np.array(data), np.array(gammas)
 
 
 def assemble_matrix_for_inner_nodes(inner_nodes, cell_nodes, quad_nodes, node_coords, cell_areas, c, v_col, v_data, node_to_quads_sorted, Voronoi=False):
@@ -126,28 +127,11 @@ def assemble_matrix_for_inner_nodes(inner_nodes, cell_nodes, quad_nodes, node_co
 
 
 # - div (k * grad u) + c*u = f
-def calculate(quadrangle_mesh_name, k, info=False, plot=False):
-    x, y = sympy.symbols('x y')
-
-    u_exact = sympy.exp(x*y)
-    #u_exact = x * (x - 1) * sympy.sin(4 * sympy.pi * y / 3)
+def calculate(quadrangle_mesh_name, k, max_iter, tau=None, r_rel_min=-1, info=False, plot=False):
+    u_bc = 0
+    f = 1
     c = 0
 
-    grad_u = sympy.Matrix([u_exact.diff(x), u_exact.diff(y)])
-    flux = k * grad_u
-    div_flux = flux[0].diff(x) + flux[1].diff(y)
-    f = -div_flux + c * u_exact
-    # print(f)
-    # exit()
-
-    u_exact = sympy.lambdify([x, y], u_exact, "numpy")
-    f = sympy.lambdify([x, y], f, "numpy")
-    c = sympy.lambdify([x, y], c, "numpy")
-    grad = sympy.lambdify([x, y], grad_u, "numpy")
-
-    t = []
-    t.append(time.time())
-    # 0
     node_coords, quad_nodes, node_groups, cell_nodes, quad_areas = load_data(quadrangle_mesh_name)
     
     # по ноде знаем порядок вершин (против часовой), а хотим еще порядок квадов против часовой
@@ -183,53 +167,19 @@ def calculate(quadrangle_mesh_name, k, info=False, plot=False):
     # Можно еще словарь 2 ноды (сортед) в квад, но лучше при генерации квадов
     #node_to_quads = np.array(node_to_quads)
 
-    t.append(time.time())
+    quad_node_coords_special = np.concatenate((node_coords[quad_nodes][:, ::2], node_coords[quad_nodes][:, 1::2]), axis=1)
+    quad_centers = utility_mvd.compute_intersection_points(*quad_node_coords_special.transpose(1, 2, 0).reshape(-1, quad_nodes.shape[0]))
 
-    quad_node_coords = np.concatenate((node_coords[quad_nodes][:, ::2], node_coords[quad_nodes][:, 1::2]), axis=1)
-    quad_centers = utility_mvd.compute_intersection_points(*quad_node_coords.transpose(1, 2, 0).reshape(-1, quad_nodes.shape[0]))
-
-    t.append(time.time())
-
-    # 1
-    #print(cell_nodes.dtype, cell_nodes[0].dtype)
-    #print(node_coords[cell_nodes.astype(np.int64)])
-    d = {}
-    for n in cell_nodes:
-        sh = n.size
-        if sh not in d:
-            d[sh] = 0
-        d[sh] += 1
+    cell_areas = np.array([utility_mvd.compute_polygon_area(*cell_node_coords.T) for cell_node_coords in (node_coords[nodes] for nodes in cell_nodes)])
     
-    for k, v in d.items():
-        print(k, ' -> ', v)
-    #exit()
-
-    # node_coords[cell_nodes]
-    cell_node_coords = np.array([node_coords[nodes] for nodes in cell_nodes], dtype=object)
-
-    a1 = np.ones((2, 2))
-    print(a1 @ a1, np.vecdot(a1, a1))
-
-    print(cell_node_coords.shape)
-    print()
-    exit()
-
-    cell_areas = utility_mvd.compute_polygon_area(cell_nodes, node_coords)
-    t.append(time.time())
-    # 2
-    v_col, v_data = calculate_vector_values(quad_nodes, node_coords, k)
-    t.append(time.time())
-    # 3
+    v_col, v_data, gammas = calculate_vector_values(quad_nodes, node_coords, k)
+    
     row_D, col_D, data_D = assemble_matrix_for_inner_nodes(
         range(node_groups[0]), cell_nodes[:node_groups[0]], quad_nodes, node_coords, cell_areas[:node_groups[0]], c, v_col, v_data, node_to_quads_sorted[:node_groups[0]])
-    
-    t.append(time.time())
-    # 4
+        
     row_V, col_V, data_V = assemble_matrix_for_inner_nodes(
         range(node_groups[0], node_groups[1]), cell_nodes[node_groups[0]:node_groups[1]], quad_nodes, node_coords, cell_areas[node_groups[0]:node_groups[1]], c, v_col, v_data, node_to_quads_sorted[node_groups[0]:node_groups[1]], Voronoi=True)
-    
-    t.append(time.time())
-    # 5
+        
     row, col, data  = [], [], []
     row = row_D + row_V
     col = col_D + col_V
@@ -239,59 +189,84 @@ def calculate(quadrangle_mesh_name, k, info=False, plot=False):
     A_inner_sparse.eliminate_zeros()
     A_inner_csr = A_inner_sparse.tocsr()
 
-    t.append(time.time())
-    # 6
-    f_inner = f(node_coords[:node_groups[1], 0], node_coords[:node_groups[1], 1]) * cell_areas[:node_groups[1]]
-    f_boundary = u_exact(node_coords[node_groups[1]:, 0], node_coords[node_groups[1]:, 1])
+    #f_inner = f(node_coords[:node_groups[1], 0], node_coords[:node_groups[1], 1]) * cell_areas[:node_groups[1]]
+    f_inner = np.full_like(node_coords[:node_groups[1], 0], f) * cell_areas[:node_groups[1]]
+    f_boundary = np.full_like(node_coords[node_groups[1]:, 0], u_bc)
 
-    t.append(time.time())
-    # 7
     # lifting
     f_inner -= A_inner_csr[:, node_groups[1]:] @ f_boundary
 
-    t.append(time.time())
-    # 8
     A_inner_csr.resize((node_groups[1], node_groups[1]))
 
-    t.append(time.time())
-    # 9
-    u = spsolve(A_inner_csr, f_inner)
+    # u = spsolve(A_inner_csr, f_inner)
 
-    t.append(time.time())
-    # 10
-    u = np.concatenate((u, f_boundary))
+    A = A_inner_csr
+    f = f_inner
+    y = np.zeros(A.shape[0])
 
-    t.append(time.time())
-    # 11
-    u_e = u_exact(node_coords[:, 0], node_coords[:, 1])
+    A_DD = csr_array((node_groups[0], node_groups[0]))
+    A_VV = csr_array((node_groups[1] - node_groups[0], node_groups[1] - node_groups[0]))
 
-    t.append(time.time())
-    # 12
-    L_max_D, L_max_V, L_max, L_2_D, L_2_V, L_2 = utility_mvd.calculate_errornorms(u, u_e, cell_areas, node_groups)
+    A_DD = A[:node_groups[0], :node_groups[0]]
+    A_VV = A[node_groups[0]:, node_groups[0]:]
 
-    t.append(time.time())
-    # 13
-    vector_errornorm = utility_mvd.calculate_vector_errornorm(quad_nodes, quad_areas, node_coords, quad_centers, grad, u)
+    A_DV = csr_array((node_groups[0], node_groups[1] - node_groups[0]))
+    A_VD = csr_array((node_groups[1] - node_groups[0], node_groups[0]))
 
-    t.append(time.time())
+    A_DV = A[:node_groups[0], node_groups[0]:]
+    A_VD = A[node_groups[0]:, :node_groups[0]]
 
-    t = np.array(t)
+    A_DD_inv = inv(A_DD.tocsc()).tocsr()
+    A_VV_inv = inv(A_VV.tocsc()).tocsr()
+
+    f_D = f[:node_groups[0]]
+    f_V = f[node_groups[0]:]
+
+    y_D = y[:node_groups[0]]
+    y_V = y[node_groups[0]:]
+
+    gamma = np.abs(gammas).max()
+    if tau is None:
+        tau = 2 / (1 + gamma)
+
+    f_norm = np.linalg.norm(f)
+
+    r_D = A_DD @ y_D + A_DV @ y_V - f_D
+    r_V = A_VD @ y_D + A_VV @ y_V - f_V
+    r_abs = [np.linalg.norm(np.concatenate((r_D, r_V)))]
+    r_rel = [r_abs[-1] / f_norm]
+
     if info:
-        print(np.roll(t, -1) - t)
-
-    if plot:
-        utility_mvd.plot_results(u, u_e, node_coords, node_groups)
+        print(0, r_abs[-1], r_rel[-1])
+        
+    if (r_rel[-1] < r_rel_min):
+        return np.array(r_abs), np.array(r_rel), gamma, tau
     
-    #print(u)
-    return node_coords.shape[0], L_max_D, L_max_V, L_max, L_2_D, L_2_V, L_2, vector_errornorm
+    for i in range(1, max_iter + 1):
+        y_D = y_D - tau * A_DD_inv @ r_D
+        y_V = y_V - tau * A_VV_inv @ r_V
+
+        r_D = A_DD @ y_D + A_DV @ y_V - f_D
+        r_V = A_VD @ y_D + A_VV @ y_V - f_V
+        r_abs.append(np.linalg.norm(np.concatenate((r_D, r_V))))
+        r_rel.append(r_abs[-1] / f_norm)
+
+        if info:
+            print(i, r_abs[-1], r_rel[-1])
+        
+        if r_rel[-1] < r_rel_min:
+            break
+
+    return np.array(r_abs), np.array(r_rel), gamma, tau
 
 
 if __name__ == '__main__':
+    sigma = 7
     k = np.array(
-        ((1, 0.5),
-         (0.2, 1))
+        ((1, sigma),
+         (sigma, 100))
     )
-    res = calculate('meshes/rectangle/rectangle_18_quadrangle', k, info=True, plot=False)
-    print(res)
+    res = calculate('meshes/rectangle/rectangle_18_quadrangle', k, 10000, 1, 1e-6, info=True, plot=False)
+    #print(res)
 
     # матрица симметрична при любой к, ответ меняется на 1е-12 при лифтинге

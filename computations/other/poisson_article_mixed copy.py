@@ -7,19 +7,14 @@ import numpy as np
 
 
 def solve(mesh_name, finite_element, k):
-    mesh_type = mesh_name.split('.')[-1]
-    if mesh_type == 'msh':
-        domain, cell_markers, facet_markers = dolfinx.io.gmshio.read_from_msh(mesh_name, MPI.COMM_WORLD, gdim=2)
-    elif mesh_type == 'xdmf':
-        with dolfinx.io.XDMFFile(MPI.COMM_WORLD, mesh_name, "r") as xdmf:
-            domain = xdmf.read_mesh(name="Grid")
+    domain = dolfinx.mesh.create_unit_square(MPI.COMM_WORLD, 8, 8, dolfinx.mesh.CellType.triangle)
 
     x = ufl.SpatialCoordinate(domain)
     u_analytic = lambda x: np.exp(x[0]*x[1])
     u_ufl = ufl.exp(x[0]*x[1])
     n = ufl.FacetNormal(domain)
 
-    V = dolfinx.fem.functionspace(domain, finite_element)
+    V = dolfinx.fem.functionspace(domain, ('Lagrange', 1))
 
     u = ufl.TrialFunction(V)
     v = ufl.TestFunction(V)
@@ -35,6 +30,39 @@ def solve(mesh_name, finite_element, k):
 
     problem = dolfinx.fem.petsc.LinearProblem(a, L, bcs=[bc], petsc_options={"ksp_type": "preonly", "pc_type": "lu"})
     u = problem.solve()
+
+
+
+    coords = domain.geometry.x  # shape (Nverts, gdim)
+    tdim = domain.topology.dim
+    domain.topology.create_connectivity(tdim, 0)
+    cells = domain.topology.connectivity(tdim, 0).array.reshape(-1, 3)
+
+    values = u.x.array.real
+
+    n_levels = 4
+    levels = np.quantile(values, np.linspace(0, 1, n_levels + 1))
+    print("Квантили:", levels)
+
+    from matplotlib.colors import BoundaryNorm
+    from matplotlib import cm
+    cmap = cm.get_cmap("jet", n_levels)
+    norm = BoundaryNorm(levels, ncolors=cmap.N)
+
+
+    import matplotlib.pyplot as plt
+    import matplotlib.tri as tri
+    triangulation = tri.Triangulation(*coords[:, :2].T, cells)
+    asd = plt.tricontourf(triangulation, values, levels, cmap=cmap, norm=norm)
+    plt.tricontour(triangulation, values, levels=levels, colors='k')
+    plt.colorbar(asd)
+
+    plt.show()
+
+    exit()
+
+
+
 
     V_compare = dolfinx.fem.functionspace(domain, basix.ufl.element("Lagrange", domain.topology.cell_name(), 4))
     u_e_compare = dolfinx.fem.Function(V_compare)

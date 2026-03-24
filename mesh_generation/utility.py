@@ -64,6 +64,17 @@ def get_max_angle():
     return np.max(angles)
 
 
+def compute_cos(element_coords):
+    v1 = np.roll(element_coords, 1, axis=1) - element_coords
+    v2 = np.roll(element_coords, -1, axis=1) - element_coords
+    cos = np.sum(v1 * v2, axis=2) / (np.linalg.norm(v1, axis=2)*np.linalg.norm(v2, axis=2))
+    return cos
+
+
+def compute_angles(element_coords):
+    return np.degrees(np.arccos(compute_cos(element_coords)))
+
+
 def get_all_angles():
     element_types, element_tags, node_tags = gmsh.model.mesh.get_elements()
 
@@ -155,7 +166,7 @@ def is_counter_clockwise(points):
     points = np.asarray(points)
     centroid = np.sum(points, axis=0) / points.shape[0]
     area = signed_triangle_area(*([p[:2] for p in points[:2]] + [centroid[:2]]))
-    assert not np.isclose(area, 0)
+    assert not np.isclose(area, 0, atol=1e-10)
     return area > 0
 
 

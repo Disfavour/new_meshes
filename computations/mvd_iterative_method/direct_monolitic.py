@@ -1,0 +1,172 @@
+import gmsh
+import numpy as np
+import sympy
+import sys
+sys.path.append('computations')
+import utility_mvd
+from scipy.sparse import lil_array, coo_array
+from scipy.sparse.linalg import spsolve
+
+
+def load_data(quadrangle_mesh_name):
+    gmsh.initialize()
+    gmsh.open(f'{quadrangle_mesh_name}.msh')
+
+    quads, quad_nodes = gmsh.model.mesh.get_elements_by_type(gmsh.model.mesh.get_element_type("Quadrangle", 1))
+    quad_nodes = quad_nodes.reshape(-1, 4)
+
+    nodes, node_coords, _ = gmsh.model.mesh.get_nodes()
+    node_coords = node_coords.reshape(-1, 3)
+
+    quad_areas = gmsh.model.mesh.get_element_qualities(quads, 'volume')
+    gmsh.finalize()
+
+    assert nodes.size == nodes.max()
+    if not np.all(nodes[:-1] < nodes[1:]):
+        indices = np.argsort(nodes)
+        nodes = nodes[indices]
+        node_coords = node_coords[indices]
+    assert np.all(nodes[:-1] < nodes[1:])
+    
+    loaded = np.load(f'{quadrangle_mesh_name}.npz', allow_pickle=True)
+    node_groups = loaded['node_groups']
+    cell_nodes = loaded['cells']
+
+    node_coords = node_coords[:, :2]
+    quad_nodes = quad_nodes.astype(int) - 1
+    node_groups = node_groups.astype(int)
+    cell_nodes = np.array([nodes.astype(int) for nodes in cell_nodes], dtype=object) - 1
+
+    return node_coords, quad_nodes, node_groups, cell_nodes, quad_areas
+
+
+# Векторные величины в точках пересечения диагоналей четырехугольных ячеек
+def calculate_vector_values(quadrangle_nodes, node_coords, k):
+    col, data  = [], []
+
+    B = np.column_stack((
+        (1, 0),
+        (0, 1)
+    ))
+
+    for i, quad_nodes in enumerate(quadrangle_nodes):
+        e_D = node_coords[quad_nodes[2]] - node_coords[quad_nodes[0]]
+        e_D_lenght = np.linalg.norm(e_D)
+
+        e_V = node_coords[quad_nodes[3]] - node_coords[quad_nodes[1]]
+        e_V_lenght = np.linalg.norm(e_V)
+        
+        B_new_basis = np.column_stack((
+            e_D / e_D_lenght,
+            e_V / e_V_lenght
+        ))
+
+        C = np.linalg.inv(B) @ B_new_basis
+        k_new_basis = np.linalg.inv(C) @ k @ C
+
+        col.extend((
+            quad_nodes[2],
+            quad_nodes[0],
+            quad_nodes[3],
+            quad_nodes[1],
+            quad_nodes[2],
+            quad_nodes[0],
+            quad_nodes[3],
+            quad_nodes[1],
+        ))
+        data.extend((
+            k_new_basis[0, 0] / e_D_lenght,
+            -k_new_basis[0, 0] / e_D_lenght,
+            k_new_basis[0, 1] / e_V_lenght,
+            -k_new_basis[0, 1] / e_V_lenght,
+            k_new_basis[1, 0] / e_D_lenght,
+            -k_new_basis[1, 0] / e_D_lenght,
+            k_new_basis[1, 1] / e_V_lenght,
+            -k_new_basis[1, 1] / e_V_lenght,
+        ))
+
+
+    return np.array(col), np.array(data)
+
+
+def assemble_matrix_for_inner_nodes(inner_nodes, cell_nodes, quad_nodes, node_coords, cell_areas, c, v_col, v_data, Voronoi=False):
+    row, col, data = [], [], []
+    for inner_node, current_cell_nodes, cell_area in zip(inner_nodes, cell_nodes, cell_areas):
+        for n1, n2 in zip(current_cell_nodes, np.roll(current_cell_nodes, -1)):
+            # Сделать через ребра
+            quad_index = (((quad_nodes == n1) + (quad_nodes == n2)).sum(axis=1) == 2).nonzero()[0].item()
+            current_quad_nodes = quad_nodes[quad_index]
+                                    
+            edge_lenght = np.linalg.norm((node_coords[n1] - node_coords[n2]))
+
+            # div += Попробовать lil, c не работает
+            if Voronoi == False:
+                # v_row не нужен
+                row.extend([inner_node for i in range(4)])
+                col.extend(v_col[quad_index*8:quad_index*8 + 4])
+                if inner_node == current_quad_nodes[0 + Voronoi]:
+                    data.extend(-v_data[quad_index*8:quad_index*8 + 4] * edge_lenght)
+                else:
+                    data.extend(v_data[quad_index*8:quad_index*8 + 4] * edge_lenght)
+            else:
+                row.extend([inner_node for i in range(4)])
+                col.extend(v_col[quad_index*8 + 4:quad_index*8 + 8])
+                if inner_node == current_quad_nodes[0 + Voronoi]:
+                    data.extend(-v_data[quad_index*8 + 4:quad_index*8 + 8] * edge_lenght)
+                else:
+                    data.extend(v_data[quad_index*8 + 4:quad_index*8 + 8] * edge_lenght)
+
+    
+    return row, col, data #np.array(row), np.array(col), np.array(data)
+
+
+# - div (k * grad u) + c*u = f
+def calculate(quadrangle_mesh_name, k, plot=False):
+    u_bc = 0
+    f = 1
+    c = 0
+
+    node_coords, quad_nodes, node_groups, cell_nodes, quad_areas = load_data(quadrangle_mesh_name)
+    cell_areas = utility_mvd.compute_cell_areas(cell_nodes, node_coords)
+
+    row, col, data  = [], [], []
+
+    v_col, v_data = calculate_vector_values(quad_nodes, node_coords, k)
+
+    row_D, col_D, data_D = assemble_matrix_for_inner_nodes(
+        range(node_groups[0]), cell_nodes[:node_groups[0]], quad_nodes, node_coords, cell_areas[:node_groups[0]], c, v_col, v_data)
+    
+    row_V, col_V, data_V = assemble_matrix_for_inner_nodes(
+        range(node_groups[0], node_groups[1]), cell_nodes[node_groups[0]:node_groups[1]], quad_nodes, node_coords, cell_areas[node_groups[0]:node_groups[1]], c, v_col, v_data, Voronoi=True)
+
+    row = row_D + row_V
+    col = col_D + col_V
+    data = data_D + data_V
+
+    A_inner_sparse = coo_array((data, (row, col)), shape=(node_groups[1], node_coords.shape[0]))
+    A_inner_sparse.eliminate_zeros()
+    A_inner_csr = A_inner_sparse.tocsr()
+
+    #f_inner = f(node_coords[:node_groups[1], 0], node_coords[:node_groups[1], 1]) * cell_areas[:node_groups[1]]
+    f_inner = np.full_like(node_coords[:node_groups[1], 0], f) * cell_areas[:node_groups[1]]
+    f_boundary = np.full_like(node_coords[node_groups[1]:, 0], u_bc)
+
+    # lifting
+    f_inner -= A_inner_csr[:, node_groups[1]:] @ f_boundary
+    A_inner_csr.resize((node_groups[1], node_groups[1]))
+
+    u = spsolve(A_inner_csr, f_inner)
+    u = np.concatenate((u, f_boundary))
+    
+    return node_coords, u
+
+
+if __name__ == '__main__':
+    k = np.array(
+        ((1, 0.5),
+         (0, 1))
+    )
+    res = calculate('meshes/rectangle/rectangle_0_quadrangle', k, plot=False)
+    print(res[0].shape, res[1].shape)
+
+    # матрица симметрична при любой к, ответ меняется на 1е-12 при лифтинге

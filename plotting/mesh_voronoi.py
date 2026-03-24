@@ -6,7 +6,7 @@ import utility
 import gmsh
 
 
-def plot(quadrangle_mesh, fname):
+def plot(quadrangle_mesh, fname, color='r', marker='o'):
     gmsh.initialize()
     gmsh.open(f'{quadrangle_mesh}.msh')
     xmin, ymin, zmin, xmax, ymax, zmax = gmsh.model.get_bounding_box(-1, -1)
@@ -32,12 +32,12 @@ def plot(quadrangle_mesh, fname):
     nodes_V = np.concatenate((np.arange(node_groups[0], node_groups[1]), np.arange(node_groups[2], node_groups[3])))
     nodes_V_coords = node_coords[nodes_V]
 
-    pc = matplotlib.collections.PolyCollection(cells_D_coords, facecolors='none', edgecolors='r')
+    pc = matplotlib.collections.PolyCollection(cells_D_coords, facecolors='none', edgecolors=color)
 
     fig, ax = plt.subplots(figsize=utility.get_figsize(xmax - xmin, ymax - ymin))
     ax.add_collection(pc)
 
-    ax.plot(nodes_V_coords[:, 0], nodes_V_coords[:, 1], 'or')
+    ax.plot(nodes_V_coords[:, 0], nodes_V_coords[:, 1], f'{marker}{color}')
     
     ax.axis('scaled')
     ax.set_axis_off()
@@ -49,3 +49,4 @@ def plot(quadrangle_mesh, fname):
 
 if __name__ == '__main__':
     plot(f'meshes/rectangle/rectangle_0_quadrangle', 'images/mvd/mesh_voronoi.pdf')
+    plot(f'meshes/rectangle/rectangle_0_quadrangle', 'images/mvd/bw_mesh_voronoi.pdf', 'k', 'X')

@@ -1,9 +1,32 @@
 import numpy as np
 import gmsh
 
+
+def get_default_figsize(text_width=16.5):
+    cm = 1 / 2.54
+    width = text_width * cm
+    height = 9 / 16 * width
+    return width, height
+
+
+def get_default_figsize_column(text_width=16.5):
+    width, height = get_default_figsize(text_width)
+    return 0.49*width, height
+
+
+def get_figsize(x_len, y_len, text_width=16.5):
+    width, height = get_default_figsize(text_width)
+    if x_len / y_len >= 16 / 9:
+        return (width, width / (x_len / y_len))
+    else:
+        return (x_len / y_len * height, height)
+    
+
+
+
 def get_text_width():
     cm = 1 / 2.54
-    text_width = 16.5 * cm
+    text_width = 16.5 * cm # 16.5 15.5
     return text_width
 
 
@@ -11,22 +34,46 @@ def get_default_height():
     return 9 / 16 * get_text_width()
 
 
-def get_default_figsize():
-    return (get_text_width(), get_default_height())
+
+    
+
+def get_figsize_2_columns_default():
+    text_width = get_text_width() * 0.49 # get_text_width() / 2
+    return (text_width, 3 / 4 * text_width)
 
 
-def get_figsize(x_len, y_len):
-    width = get_text_width()
-    height = get_default_height()
-    if x_len / y_len >= 16 / 9:
-        return (width, width / (x_len / y_len))
-    else:
-        return (x_len / y_len * height, height)
+# def get_figsize_2_columns_default():
+#     figsize = get_default_figsize()
+#     return (figsize[0] / 2, figsize[1])
 
 
-def get_figsize_2_columns():
+def get_figsize_2_columns(xlen, ylen):
     figsize = get_default_figsize()
-    return (figsize[0] / 2, figsize[1])
+    figsize = (figsize[0] / 2, figsize[1])
+    if xlen / ylen >= figsize[0] / figsize[1]:
+        return (figsize[0], figsize[0] / (xlen / ylen))
+    else:
+        return (xlen / ylen * figsize[1], figsize[1])
+
+
+def reverse_dict(d):
+    res = {}
+    for k, vs in d.items():
+        for v in vs:
+            if v not in res:
+                res[v] = []
+            res[v].append(k)
+    return res
+
+
+def circumcenter(A, B, C):
+    Ax, Ay, _ = A
+    Bx, By, _ = B
+    Cx, Cy, _ = C
+    D = 2 * (Ax*(By-Cy) + Bx*(Cy-Ay) + Cx*(Ay-By))
+    Ux = ((Ax**2 + Ay**2)*(By-Cy) + (Bx**2 + By**2)*(Cy-Ay) + (Cx**2 + Cy**2)*(Ay-By)) / D
+    Uy = ((Ax**2 + Ay**2)*(Cx-Bx) + (Bx**2 + By**2)*(Ax-Cx) + (Cx**2 + Cy**2)*(Bx-Ax)) / D
+    return np.array((Ux, Uy, _))
 
 
 def get_intersection_point_of_lines(a1, a2, b1, b2):
@@ -37,6 +84,13 @@ def get_intersection_point_of_lines(a1, a2, b1, b2):
     p_x = ((x1*y2 - y1*x2)*(x3 - x4) - (x1 - x2)*(x3*y4 - y3*x4)) / ((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
     p_y = ((x1*y2 - y1*x2)*(y3 - y4) - (y1 - y2)*(x3*y4 - y3*x4)) / ((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
     return p_x, p_y
+
+def compute_intersection_points_v2(x, y):
+    x1, x3, x2, x4 = x
+    y1, y3, y2, y4 = y
+    p_x = ((x1*y2 - y1*x2)*(x3 - x4) - (x1 - x2)*(x3*y4 - y3*x4)) / ((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
+    p_y = ((x1*y2 - y1*x2)*(y3 - y4) - (y1 - y2)*(x3*y4 - y3*x4)) / ((x1 - x2)*(y3 - y4) - (y1 - y2)*(x3 - x4))
+    return np.column_stack((p_x, p_y))
 
 
 def read_quad_mesh(quadrangle_mesh):
