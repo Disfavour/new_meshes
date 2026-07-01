@@ -8,6 +8,7 @@ import gmsh
 # rectangle_1_quadrangle.msh rectangle_1_split_quadrangles.msh rectangle_1_triangle rectangle_1_small_quadrangle
 n = 1
 quadrangle_mesh = f'meshes/ellipse/quadrangle_{1}'
+#quadrangle_mesh = f'meshes/rectangle/rectangle_1_triangle'
 
 gmsh.initialize()
 gmsh.open(f'{quadrangle_mesh}.msh')

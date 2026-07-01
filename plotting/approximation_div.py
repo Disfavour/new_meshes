@@ -284,8 +284,17 @@ def plot3(quadrangle_mesh, node_V, fname):
     ax.add_collection(pc_triangle)
     ax.add_collection(pc_D)
 
-    ax.quiver(edge_centers[:, 0], edge_centers[:, 1], e1[:, 0], e1[:, 1], color='b', scale=10, width=0.015)
-    ax.quiver(edge_centers[:, 0], edge_centers[:, 1], e2[:, 0], e2[:, 1], color='r', scale=10, width=0.015)
+    ax.quiver(*edge_centers[0], *e1[0], color='b', scale=6, width=0.013)
+    ax.quiver(*edge_centers[0], *e2[0], color='r', scale=6, width=0.013)
+
+    ax.quiver(*edge_centers[1], *-e1[1], color='b', scale=6, width=0.013)
+    ax.quiver(*edge_centers[1], *-e2[1], color='r', scale=6, width=0.013)
+
+    ax.quiver(*edge_centers[2], *-e1[2], color='b', scale=6, width=0.013)
+    ax.quiver(*edge_centers[2], *-e2[2], color='r', scale=6, width=0.013)
+
+    # ax.quiver(edge_centers[1:, 0], edge_centers[1:, 1], e1[1:, 0], e1[1:, 1], color='b', scale=5, width=0.015)
+    # ax.quiver(edge_centers[1:, 0], edge_centers[1:, 1], e2[1:, 0], e2[1:, 1], color='r', scale=5, width=0.015)
 
     ax.plot(triangle_coords[:, 0], triangle_coords[:, 1], 'ob')
     linked_quad_nodes = quadrangle_nodes[linked_quads][:, [1, 3]]

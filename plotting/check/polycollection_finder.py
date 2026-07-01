@@ -6,7 +6,7 @@ import pickle
 import gmsh
 
 # rectangle_1_quadrangle.msh rectangle_1_split_quadrangles.msh rectangle_1_triangle rectangle_1_small_quadrangle
-mesh_name = f'meshes/rectangle/rectangle_0_quadrangle.msh'
+mesh_name = f'meshes/rectangle/rectangle_1_quadrangle.msh'
 mesh = meshio.read(mesh_name)
 
 points = mesh.points[:, :2]

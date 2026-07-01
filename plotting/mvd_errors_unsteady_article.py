@@ -15,6 +15,28 @@ import utility_mvd
 import two_level_decoupling_special
 
 
+def plot_err(xs, ys, legend, fname, ylim=None, ylabel=r'$\varepsilon$', legend_title=None, base=2):
+    fig, ax = plt.subplots(figsize=utility.get_default_figsize(), constrained_layout=True)
+    
+    for x, y in zip(xs, ys):
+        ax.plot(x, y)
+
+    print(ylim)
+    if ylim is not None:
+        ax.set_ylim(ylim)
+    
+    ax.set_xlabel("$t$")
+    ax.set_ylabel(ylabel)
+    ax.grid()
+
+    #ax.set_xscale('log')
+    ax.set_yscale('log', base=base)
+    ax.legend(legend, title=legend_title, loc='upper right')
+
+    fig.savefig(fname, transparent=True)
+    plt.close()
+
+
 def plot_err_bw(xs, ys, legend, fname, ylim=None, ylabel=r'$\varepsilon$', legend_title=None, base=2):
     line_styles = ('-', '--', '-.', ':')
 
@@ -217,7 +239,7 @@ def plot_convergence():
     ylims = ((4 ** -7, None), (4 ** -7, 4 ** -3))
 
     folder = 'images/unsteady_anisotropic_diffusion_reaction/errors_bw2'
-    fnames = (f'{folder}/f-4.pdf', f'{folder}/f-5.pdf')
+    fnames = (f'{folder}/f-4_c.pdf', f'{folder}/f-5_c.pdf')
 
     for solve, prefix, fname, ylim in zip((two_level_special.solve, two_level_decoupling_special.solve), ('implicit', 'decoupling'), fnames, ylims):
         time_meshes = []
@@ -252,7 +274,8 @@ def plot_convergence():
             time_meshes.append(time_mesh)
             errs.append(err)
         
-        plot_err_bw(time_meshes, errs, legend, fname, legend_title=rf'$G, \tau$', base=4, ylim=ylim)
+        #plot_err_bw(time_meshes, errs, legend, fname, legend_title=rf'$G, \tau$', base=4, ylim=ylim)
+        plot_err(time_meshes, errs, legend, fname, legend_title=rf'$G, \tau$', base=4, ylim=ylim)
 
 
 def plot_solutions(prefix='symmetric', mesh=5, t_degree=7, n=12):
